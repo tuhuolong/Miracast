@@ -1,8 +1,9 @@
 
-package com.milink.milink;
+package com.milink.milink.server;
 
 import android.util.Log;
 
+import com.milink.milink.common.IQ;
 import com.milink.net.asio.tcp.server.TcpConn;
 import com.milink.net.asio.tcp.server.TcpServer;
 import com.milink.net.asio.tcp.server.TcpServerListener;
@@ -57,7 +58,7 @@ public class MiLinkServer implements TcpServerListener {
 
         IQ iq = IQ.create(data);
         if (iq != null) {
-            mListener.onRecvRequest(conn.getIp(), conn.getPort(), iq);
+            mListener.onReceived(conn.getIp(), conn.getPort(), iq);
         }
     }
 

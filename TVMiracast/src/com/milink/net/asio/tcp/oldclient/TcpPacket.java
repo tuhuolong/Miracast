@@ -1,13 +1,12 @@
 
-package com.milink.net.asio.tcp.client;
+package com.milink.net.asio.tcp.oldclient;
 
 public class TcpPacket {
 
     public enum Type {
         Unknown,
         Exit,
-        Receive,
-        Send,
+        Normal,
     };
 
     public Type type = Type.Unknown;

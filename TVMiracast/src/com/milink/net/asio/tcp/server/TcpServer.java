@@ -47,9 +47,9 @@ public class TcpServer {
     public void start() {
         if (!mStarted) {
             mStarted = true;
-            mSelectWorker = new SelectWorker();
             mRecvWorker = new RecvWorker();
             mSendWorker = new SendWorker();
+            mSelectWorker = new SelectWorker();
         }
     }
 
@@ -147,6 +147,8 @@ public class TcpServer {
                     break;
                 }
             }
+
+            Log.d(TAG, "listen stopped");
         }
 
         private void preSelect() {

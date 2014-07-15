@@ -1,5 +1,5 @@
 
-package com.milink.milink;
+package com.milink.milink.common;
 
 public class Contants {
 

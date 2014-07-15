@@ -1,5 +1,5 @@
 
-package com.milink.milink;
+package com.milink.milink.common;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

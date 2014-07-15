@@ -7,9 +7,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 
-import com.milink.milink.IQ;
-import com.milink.milink.MiLinkServer;
-import com.milink.milink.MiLinkServerListener;
+import com.milink.milink.common.IQ;
+import com.milink.milink.server.MiLinkServer;
+import com.milink.milink.server.MiLinkServerListener;
 
 public class MainActivity extends Activity implements MiLinkServerListener {
 
