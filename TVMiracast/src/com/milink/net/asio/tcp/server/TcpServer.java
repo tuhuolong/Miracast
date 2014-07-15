@@ -1,5 +1,7 @@
 
-package com.milink.asio.tcp.server;
+package com.milink.net.asio.tcp.server;
+
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,10 +17,13 @@ import java.util.concurrent.BlockingQueue;
 
 public class TcpServer {
 
+    private static final String TAG = TcpServer.class.getSimpleName();
+
     private TcpServerListener mListener = null;
     private ServerSocketChannel mServerChannel = null;
     private int mListenPort = 0;
     private boolean mStarted = false;
+    private TcpConnPool mConnPool = new TcpConnPool();
     private SelectWorker mSelectWorker = null;
     private RecvWorker mRecvWorker = null;
     private SendWorker mSendWorker = null;
@@ -59,6 +64,10 @@ public class TcpServer {
         return mListenPort;
     }
 
+    public TcpConnPool getConnPool() {
+        return mConnPool;
+    }
+
     public void closeConnection(TcpConn conn) {
         if (mStarted) {
             try {
@@ -68,10 +77,20 @@ public class TcpServer {
             }
         }
     }
+    
+    public boolean send(TcpConn conn, byte[] bytes) {
+        boolean result = false;
+
+        if (mStarted) {
+            mSendWorker.putData(conn, bytes);
+            result = true;
+        }
+        
+        return result;
+    }
 
     public class SelectWorker implements Runnable {
 
-        private TcpConnPool mConnPool = new TcpConnPool();
         private Selector mSelector = null;
         private Thread mThread = null;
 
@@ -93,8 +112,6 @@ public class TcpServer {
 
         @Override
         public void run() {
-            boolean loop = true;
-
             try {
                 mSelector = Selector.open();
             } catch (IOException e1) {
@@ -102,9 +119,13 @@ public class TcpServer {
                 return;
             }
 
-            while (loop) {
+            Log.d(TAG, String.format("listen port: %d", mListenPort));
+
+            while (true) {
                 preSelect();
                 
+                Log.d(TAG, String.format("select"));
+               
                 try {
                     mSelector.select();
                 } catch (IOException e) {
@@ -126,23 +147,33 @@ public class TcpServer {
         }
 
         private void preSelect() {
+            Log.d(TAG, String.format("preSelect"));
+            
             try {
-                mServerChannel.register(mSelector, SelectionKey.OP_READ);
-                
-                for (TcpConn conn : mConnPool.getConns()) {
+                mServerChannel.register(mSelector, SelectionKey.OP_ACCEPT);
+
+                for (TcpConn conn : mConnPool.getConns().values()) {
                     conn.getChannel().register(mSelector, SelectionKey.OP_READ);
                 }
             } catch (ClosedChannelException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             }
         }
 
         private void postSelect(SelectionKey key) {
+            Log.d(TAG, String.format("postSelect"));
+            
             // accept a new connection
             if (key.isValid() && key.isAcceptable()) {
                 SocketChannel channel = (SocketChannel) key.channel();
-                TcpConn conn = new TcpConn(channel);
+                String ip = channel.socket().getInetAddress().getHostAddress();
+                int port = channel.socket().getPort();
+                
+                TcpConn conn = new TcpConn(ip, port, channel);
                 mRecvWorker.putNewConnection(conn);
+
                 mConnPool.add(conn);
                 return;
             }
@@ -286,7 +317,7 @@ public class TcpServer {
                     mListener.onConnectionClosed(TcpServer.this, packet.conn);
                 }
                 else if (packet.type == TcpPacket.Type.Receive) {
-                    mListener.onReceive(TcpServer.this, packet.conn, packet.data);
+                    mListener.onReceived(TcpServer.this, packet.conn, packet.data);
                 }
             }
 
