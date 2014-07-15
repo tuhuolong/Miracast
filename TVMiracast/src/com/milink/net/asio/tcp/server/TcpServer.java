@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -77,7 +79,7 @@ public class TcpServer {
             }
         }
     }
-    
+
     public boolean send(TcpConn conn, byte[] bytes) {
         boolean result = false;
 
@@ -85,7 +87,7 @@ public class TcpServer {
             mSendWorker.putData(conn, bytes);
             result = true;
         }
-        
+
         return result;
     }
 
@@ -123,32 +125,33 @@ public class TcpServer {
 
             while (true) {
                 preSelect();
-                
+
                 Log.d(TAG, String.format("select"));
-               
+
                 try {
                     mSelector.select();
                 } catch (IOException e) {
                     break;
                 }
 
-                Iterator<SelectionKey> it = mSelector.selectedKeys().iterator();
-                if (!it.hasNext())
+                try {
+                    Set<SelectionKey> readyKeys = mSelector.selectedKeys();
+                    Iterator<SelectionKey> iter = readyKeys.iterator();
+
+                    while (iter.hasNext()) {
+                        SelectionKey key = iter.next();
+                        iter.remove();
+                        postSelect(key);
+                    }
+                } catch (ClosedSelectorException e) {
                     break;
-
-                while (it.hasNext()) {
-                    SelectionKey key = it.next();
-                    it.remove();
-
-                    postSelect(key);
                 }
             }
-
         }
 
         private void preSelect() {
             Log.d(TAG, String.format("preSelect"));
-            
+
             try {
                 mServerChannel.register(mSelector, SelectionKey.OP_ACCEPT);
 
@@ -164,17 +167,25 @@ public class TcpServer {
 
         private void postSelect(SelectionKey key) {
             Log.d(TAG, String.format("postSelect"));
-            
+
             // accept a new connection
             if (key.isValid() && key.isAcceptable()) {
-                SocketChannel channel = (SocketChannel) key.channel();
-                String ip = channel.socket().getInetAddress().getHostAddress();
-                int port = channel.socket().getPort();
-                
-                TcpConn conn = new TcpConn(ip, port, channel);
-                mRecvWorker.putNewConnection(conn);
+                try {
+                    ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                    SocketChannel connection = server.accept();
+                    connection.configureBlocking(false);
+                        
+                    String ip = connection.socket().getInetAddress().getHostAddress();
+                    int port = connection.socket().getPort();
 
-                mConnPool.add(conn);
+                    TcpConn conn = new TcpConn(ip, port, connection);
+                    mRecvWorker.putNewConnection(conn);
+
+                    mConnPool.add(conn);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+
                 return;
             }
 
@@ -211,7 +222,7 @@ public class TcpServer {
 
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
-                    
+
                     mConnPool.remove(conn);
                 }
             }
