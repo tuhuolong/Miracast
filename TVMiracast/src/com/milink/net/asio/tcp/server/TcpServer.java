@@ -44,22 +44,34 @@ public class TcpServer {
         }
     }
 
-    public void start() {
+    public boolean start() {
+        boolean doing = false;
+
         if (!mStarted) {
             mStarted = true;
             mRecvWorker = new RecvWorker();
             mSendWorker = new SendWorker();
             mSelectWorker = new SelectWorker();
+            
+            doing = true;
         }
+        
+        return doing;
     }
 
-    public void stop() {
+    public boolean stop() {
+        boolean done = false;
+
         if (mStarted) {
             mStarted = false;
             mSelectWorker.close();
             mRecvWorker.close();
             mSendWorker.close();
+            
+            done = true;
         }
+        
+        return done;
     }
 
     public int getListenPort() {
@@ -81,14 +93,14 @@ public class TcpServer {
     }
 
     public boolean send(TcpConn conn, byte[] bytes) {
-        boolean result = false;
+        boolean doing = false;
 
         if (mStarted) {
             mSendWorker.putData(conn, bytes);
-            result = true;
+            doing = true;
         }
 
-        return result;
+        return doing;
     }
 
     public class SelectWorker implements Runnable {
@@ -176,7 +188,7 @@ public class TcpServer {
                     ServerSocketChannel server = (ServerSocketChannel) key.channel();
                     SocketChannel connection = server.accept();
                     connection.configureBlocking(false);
-                        
+
                     String ip = connection.socket().getInetAddress().getHostAddress();
                     int port = connection.socket().getPort();
 

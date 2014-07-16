@@ -1,6 +1,7 @@
 
 package com.milink.milink.client;
 
+
 import android.util.Log;
 
 import com.milink.milink.common.IQ;
@@ -8,7 +9,7 @@ import com.milink.net.asio.tcp.client.TcpClient;
 import com.milink.net.asio.tcp.client.TcpClientListener;
 
 public class MiLinkClient implements TcpClientListener {
-
+    
     private static final String TAG = MiLinkClient.class.getSimpleName();
 
     private TcpClient mClient = null;
@@ -19,12 +20,12 @@ public class MiLinkClient implements TcpClientListener {
         mListener = listener;
     }
 
-    public void connect(String ip, int port, int millisecond) {
-        mClient.connect(ip, port, millisecond);
+    public boolean connect(String ip, int port, int millisecond) {
+        return mClient.connect(ip, port, millisecond);
     }
 
-    public void disconnect() {
-        mClient.disconnect();
+    public boolean disconnect() {
+        return mClient.disconnect();
     }
 
     public boolean isConnected() {
@@ -48,25 +49,22 @@ public class MiLinkClient implements TcpClientListener {
 
     @Override
     public void onConnected(TcpClient client) {
-        Log.d(TAG, String.format("onConnected: %s:%d", client.getPeerIp(), client.getPeerPort()));
         mListener.onConnected();
     }
 
     @Override
     public void onConnectedFailed(TcpClient client) {
-        Log.d(TAG, String.format("onConnectedFailed: %s:%d", client.getPeerIp(), client.getPeerPort()));
         mListener.onConnectedFailed();
     }
 
     @Override
     public void onDisconnect(TcpClient client) {
-        Log.d(TAG, String.format("onDisconnect: %s:%d", client.getPeerIp(), client.getPeerPort()));
         mListener.onDisconnect();
     }
 
     @Override
     public void onReceived(TcpClient client, byte[] data) {
-        Log.d(TAG, String.format("onReceived: %s:%d", client.getPeerIp(), client.getPeerPort()));
+        Log.d("Recv", new String(data));
 
         IQ iq = IQ.create(data);
         if (iq != null) {

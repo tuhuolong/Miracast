@@ -16,16 +16,16 @@ public class MiLinkServer implements TcpServerListener {
     private MiLinkServerListener mListener = null;
 
     public MiLinkServer(MiLinkServerListener listener) {
-        mServer = new TcpServer(0, this);
+        mServer = new TcpServer(9999, this);
         mListener = listener;
     }
 
-    public void start() {
-        mServer.start();
+    public boolean start() {
+        return mServer.start();
     }
 
-    public void stop() {
-        mServer.stop();
+    public boolean stop() {
+        return mServer.stop();
     }
 
     public boolean send(String ip, int port, IQ iq) {

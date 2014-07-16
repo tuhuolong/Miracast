@@ -1,10 +1,16 @@
 
 package com.milink.net.asio.tcp.client;
 
+import android.util.Log;
+
+import com.milink.net.asio.tcp.oldclient.TcpConnection;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -29,16 +35,11 @@ public class TcpClient {
 
     public TcpClient(TcpClientListener listener) {
         mListener = listener;
-
-        try {
-            mChannel = SocketChannel.open();
-            mChannel.configureBlocking(false);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
-    public void connect(String ip, int port, int millisecond) {
+    public boolean connect(String ip, int port, int millisecond) {
+        boolean doing = false;
+
         if (!mIsConnected) {
             mIp = ip;
             mPort = port;
@@ -47,15 +48,27 @@ public class TcpClient {
             mRecvWorker = new RecvWorker();
             mSendWorker = new SendWorker();
             mSelectWorker = new SelectWorker();
+
+            doing = true;
         }
+
+        return doing;
     }
 
-    public void disconnect() {
+    public boolean disconnect() {
+        boolean done = false;
+
         if (mIsConnected) {
+            Log.d(TAG, String.format("disconnect: %s:%d", mIp, mPort));
+
             mSelectWorker.close();
             mSendWorker.close();
             mRecvWorker.close();
+
+            done = true;
         }
+
+        return done;
     }
 
     public boolean isConnected() {
@@ -81,14 +94,20 @@ public class TcpClient {
     }
 
     public boolean send(byte[] bytes) {
-        boolean result = false;
+        boolean done = false;
 
         if (mIsConnected) {
             mSendWorker.putData(bytes);
-            result = true;
+            done = true;
         }
 
-        return result;
+        return done;
+    }
+
+    private static enum ConnectRet {
+        ConnectException,
+        ConnectOk,
+        ConnectTimeout,
     }
 
     public class SelectWorker implements Runnable {
@@ -115,38 +134,53 @@ public class TcpClient {
         @Override
         public void run() {
             try {
+                mChannel = SocketChannel.open();
+                mChannel.configureBlocking(false);
                 mSelector = Selector.open();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-                return;
-            }
-
-            try {
-                mChannel.register(mSelector, SelectionKey.OP_CONNECT);
-                mChannel.connect(new InetSocketAddress(mIp, mPort));
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
 
-            try {
-                mSelector.select(mTimeout);
-            } catch (IOException e) {
+            ConnectRet ret = this.connect();
+            if (ret != ConnectRet.ConnectOk) {
+                Log.d(TAG, String.format("connect to %s:%d failed", mIp, mPort));
+
+                try {
+                    mChannel.close();
+                    mSelector.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 mListener.onConnectedFailed(TcpClient.this);
                 return;
             }
 
+            Log.d(TAG, String.format("connect to %s:%d is ok!", mIp, mPort));
+
             mIsConnected = true;
             mListener.onConnected(TcpClient.this);
 
+            try {
+                mChannel.register(mSelector, SelectionKey.OP_READ);
+            } catch (ClosedChannelException e) {
+                e.printStackTrace();
+                return;
+            }
+
             mLoop = true;
             while (mLoop) {
-
                 try {
+                    Log.d(TAG, "select");
                     mSelector.select();
+                } catch (ClosedSelectorException e) {
+                    break;
                 } catch (IOException e) {
                     break;
                 }
+
+                Log.d(TAG, "after select");
 
                 try {
                     Set<SelectionKey> readyKeys = mSelector.selectedKeys();
@@ -162,11 +196,55 @@ public class TcpClient {
                 }
             }
 
+            Log.d(TAG, "client is disconnect");
+
+            try {
+                mChannel.close();
+                mSelector.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             mIsConnected = false;
             mListener.onDisconnect(TcpClient.this);
         }
 
+        private ConnectRet connect() {
+            int count = 0;
+            int SLEEP_INTERVAL = 100;
+
+            try {
+                Log.d(TAG, String.format("connect to %s:%d", mIp, mPort));
+
+                mChannel.connect(new InetSocketAddress(mIp, mPort));
+
+                while (!mChannel.finishConnect()) {
+                    count += SLEEP_INTERVAL;
+                    if (count > mTimeout) {
+                        return ConnectRet.ConnectTimeout;
+                    }
+                    else
+                    {
+                        Log.i(TAG, String.format("waiting for connection establish (%s:%d)", mIp,
+                                mPort));
+                    }
+
+                    Thread.sleep(SLEEP_INTERVAL);
+                }
+
+                return ConnectRet.ConnectOk;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return ConnectRet.ConnectException;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ConnectRet.ConnectException;
+            }
+        }
+
         private void postSelect(SelectionKey key) {
+            Log.d(TAG, "postSelect");
+
             if (key.isValid() && key.isReadable()) {
                 SocketChannel channel = (SocketChannel) key.channel();
 
@@ -338,6 +416,16 @@ public class TcpClient {
                     break;
                 }
                 else if (packet.type == TcpPacket.Type.Send) {
+                    if (!mChannel.isConnected()) {
+                        Log.d(TAG, "channel is not connected!");
+                        continue;
+                    }
+
+                    String get = new String("GET / HTTP/1.1\r\n");
+                    packet.data = get.getBytes();
+
+                    Log.d("Send", new String(packet.data));
+
                     ByteBuffer buffer = ByteBuffer.wrap(packet.data);
                     buffer.clear();
 
@@ -346,7 +434,11 @@ public class TcpClient {
                         int size = 0;
                         try {
                             size = mChannel.write(buffer);
+                        } catch (NotYetConnectedException e) {
+                            e.printStackTrace();
+                            break;
                         } catch (IOException e) {
+                            e.printStackTrace();
                             break;
                         }
 
