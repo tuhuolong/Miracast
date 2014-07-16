@@ -37,7 +37,7 @@ public class MainActivity extends Activity implements MiLinkServerListener {
     }
 
     @Override
-    public void onRecvRequest(String ip, int port, IQ iq) {
+    public void onReceived(String ip, int port, IQ iq) {
         Log.d(TAG, String.format("recv: %s", iq.toString()));
     }
 }
