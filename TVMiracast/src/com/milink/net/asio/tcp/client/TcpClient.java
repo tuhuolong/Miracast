@@ -16,12 +16,16 @@ import java.util.concurrent.BlockingQueue;
 public class TcpClient {
 
     private static final String TAG = TcpClient.class.getSimpleName();
+    private static final int DEFAULT_CONNECT_TIMEOUT = 1000 * 5;
     private TcpClientListener mListener = null;
     private boolean mIsConnected = false;
     private SocketChannel mChannel = null;
     private SelectWorker mSelectWorker = null;
     private RecvWorker mRecvWorker = null;
     private SendWorker mSendWorker = null;
+    private String mIp = null;
+    private int mPort = 0;
+    private int mTimeout = 0;
 
     public TcpClient(TcpClientListener listener) {
         mListener = listener;
@@ -35,10 +39,14 @@ public class TcpClient {
     }
 
     public void connect(String ip, int port, int millisecond) {
-        if (! mIsConnected) {
+        if (!mIsConnected) {
+            mIp = ip;
+            mPort = port;
+            mTimeout = (millisecond > 0) ? millisecond : DEFAULT_CONNECT_TIMEOUT;
+
             mRecvWorker = new RecvWorker();
             mSendWorker = new SendWorker();
-            mSelectWorker = new SelectWorker(ip, port, millisecond);
+            mSelectWorker = new SelectWorker();
         }
     }
 
@@ -55,21 +63,40 @@ public class TcpClient {
             return mIsConnected;
         }
     }
-    
+
+    public String getSelfIp() {
+        return mChannel.socket().getLocalAddress().getHostAddress().toString();
+    }
+
+    public int getSelfPort() {
+        return mChannel.socket().getPort();
+    }
+
+    public String getPeerIp() {
+        return mIp;
+    }
+
+    public int getPeerPort() {
+        return mPort;
+    }
+
+    public boolean send(byte[] bytes) {
+        boolean result = false;
+
+        if (mIsConnected) {
+            mSendWorker.putData(bytes);
+            result = true;
+        }
+
+        return result;
+    }
+
     public class SelectWorker implements Runnable {
-        private static final int DEFAULT_CONNECT_TIMEOUT = 1000 * 5;
         private Selector mSelector = null;
         private Thread mThread = null;
-        private String mIp = null;
-        private int mPort = 0;
-        private int mTimeout = 0;
         private Boolean mLoop = true;
-        
-        public SelectWorker(String ip, int port, int timeout) {
-            mIp = ip;
-            mPort = port;
-            mTimeout = (timeout > 0) ? timeout : DEFAULT_CONNECT_TIMEOUT;
-            
+
+        public SelectWorker() {
             mThread = new Thread(this);
             mThread.start();
         }
@@ -109,8 +136,9 @@ public class TcpClient {
                 return;
             }
 
+            mIsConnected = true;
             mListener.onConnected(TcpClient.this);
-            
+
             mLoop = true;
             while (mLoop) {
 
@@ -134,7 +162,8 @@ public class TcpClient {
                 }
             }
 
-            mListener.onConnectedFailed(TcpClient.this);
+            mIsConnected = false;
+            mListener.onDisconnect(TcpClient.this);
         }
 
         private void postSelect(SelectionKey key) {
