@@ -171,10 +171,6 @@ public class TcpServer {
             }
 
             for (TcpConn conn : mConnPool.getConns().values()) {
-                Log.d(TAG,
-                        String.format("Selector register channel: %s:%d", conn.getIp(),
-                                conn.getPort()));
-
                 try {
                     conn.getChannel().register(mSelector, SelectionKey.OP_READ);
                 } catch (ClosedChannelException e) {
