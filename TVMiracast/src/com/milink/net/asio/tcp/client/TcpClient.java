@@ -123,6 +123,7 @@ public class TcpClient {
         public void close() {
             try {
                 mSelector.close();
+                mChannel.close();
                 mThread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -239,6 +240,8 @@ public class TcpClient {
         }
 
         private void postSelect(SelectionKey key) {
+            Log.d(TAG, String.format("postSelect"));
+
             if (key.isValid() && key.isReadable()) {
                 SocketChannel channel = (SocketChannel) key.channel();
 
@@ -247,7 +250,8 @@ public class TcpClient {
                 try {
                     numBytesRead = channel.read(buf);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    mLoop = false;
+                    return;
                 }
 
                 if (numBytesRead > 0) {
@@ -414,6 +418,8 @@ public class TcpClient {
                         Log.d(TAG, "channel is not connected!");
                         continue;
                     }
+
+                    Log.d(TAG, new String(packet.data));
 
                     ByteBuffer buffer = ByteBuffer.wrap(packet.data);
                     buffer.clear();

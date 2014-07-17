@@ -138,8 +138,6 @@ public class TcpServer {
             while (true) {
                 preSelect();
 
-                Log.d(TAG, String.format("select"));
-
                 try {
                     mSelector.select();
                 } catch (IOException e) {
@@ -213,6 +211,11 @@ public class TcpServer {
                     numBytesRead = channel.read(buf);
                 } catch (IOException e) {
                     e.printStackTrace();
+
+                    TcpConn conn = mConnPool.getConn(channel);
+                    mRecvWorker.putClosedConnection(conn);
+                    mConnPool.remove(conn);
+                    return;
                 }
 
                 if (numBytesRead > 0) {
@@ -227,7 +230,6 @@ public class TcpServer {
                     buf.clear();
                 }
                 else {
-                    // close connection;
                     try {
                         channel.close();
                     } catch (IOException e) {
@@ -236,7 +238,6 @@ public class TcpServer {
 
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
-
                     mConnPool.remove(conn);
                 }
             }
