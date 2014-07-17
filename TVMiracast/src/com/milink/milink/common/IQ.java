@@ -100,9 +100,9 @@ public class IQ {
 		mXmlns = xmlns;
 
 		if (type == Type.Event) {
-			mAction = actionOrEvent;
-		} else {
 			mEvent = actionOrEvent;
+		} else {
+			mAction = actionOrEvent;
 		}
 
 		mParam = param;
