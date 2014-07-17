@@ -216,10 +216,6 @@ public class TcpServer {
                 try {
                     numBytesRead = channel.read(buf);
                 } catch (IOException e) {
-                    e.printStackTrace();
-
-                    Log.d(TAG, String.format("channel is closed!"));
-
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
                     mConnPool.remove(conn);
@@ -238,21 +234,14 @@ public class TcpServer {
                     buf.clear();
                 }
                 else {
-                    Log.d(TAG, String.format("read < 0, close channel!"));
-
                     try {
                         channel.close();
                     } catch (IOException e) {
-                        e.printStackTrace();
                     }
 
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
-
-                    Log.d(TAG, String.format("ConnPool size %d", mConnPool.getConns().size()));
                     mConnPool.remove(conn);
-                    Log.d(TAG, String.format("remove conn %s:%d", conn.getIp(), conn.getPort()));
-                    Log.d(TAG, String.format("ConnPool size %d", mConnPool.getConns().size()));
                 }
             }
         }
