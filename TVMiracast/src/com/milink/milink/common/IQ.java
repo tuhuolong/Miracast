@@ -1,8 +1,8 @@
-
 package com.milink.milink.common;
 
 import android.util.Base64;
 
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -18,253 +18,250 @@ import javax.xml.parsers.ParserConfigurationException;
 
 public class IQ {
 
-    public enum Type {
-        Undefined,
-        Event,
-        Set,
-        Get,
-        Result,
-        Error;
+	public enum Type {
+		Undefined, Event, Set, Get, Result, Error;
 
-        public static String toString(Type type) {
-            String str = null;
+		public static String toString(Type type) {
+			String str = null;
 
-            switch (type) {
-                case Event:
-                    str = "event";
-                    break;
+			switch (type) {
+			case Event:
+				str = "event";
+				break;
 
-                case Error:
-                    str = "error";
-                    break;
+			case Error:
+				str = "error";
+				break;
 
-                case Get:
-                    str = "get";
-                    break;
+			case Get:
+				str = "get";
+				break;
 
-                case Result:
-                    str = "result";
-                    break;
+			case Result:
+				str = "result";
+				break;
 
-                case Set:
-                    str = "set";
-                    break;
+			case Set:
+				str = "set";
+				break;
 
-                default:
-                    break;
-            }
+			default:
+				break;
+			}
 
-            return str;
-        }
+			return str;
+		}
 
-        public static Type toType(String type) {
-            Type t = Type.Undefined;
+		public static Type toType(String type) {
+			Type t = Type.Undefined;
 
-            if (type.equalsIgnoreCase("event")) {
-                t = Type.Event;
-            }
-            else if (type.equalsIgnoreCase("set")) {
-                t = Type.Set;
-            }
-            else if (type.equalsIgnoreCase("get")) {
-                t = Type.Get;
-            }
-            else if (type.equalsIgnoreCase("result")) {
-                t = Type.Result;
-            }
-            else if (type.equalsIgnoreCase("error")) {
-                t = Type.Error;
-            }
+			if (type.equalsIgnoreCase("event")) {
+				t = Type.Event;
+			} else if (type.equalsIgnoreCase("set")) {
+				t = Type.Set;
+			} else if (type.equalsIgnoreCase("get")) {
+				t = Type.Get;
+			} else if (type.equalsIgnoreCase("result")) {
+				t = Type.Result;
+			} else if (type.equalsIgnoreCase("error")) {
+				t = Type.Error;
+			}
 
-            return t;
-        }
-    }
+			return t;
+		}
+	}
 
-    private Type mType = Type.Undefined;
-    private String mId = null;
-    private String mXmlns = null;
-    private String mAction = null;
-    private String mEvent = null;
-    private byte[] mParam = null;
+	private Type mType = Type.Undefined;
+	private String mId = null;
+	private String mXmlns = null;
+	private String mAction = null;
+	private String mEvent = null;
+	private byte[] mParam = null;
 
-    public static IQ create(byte bytes[]) {
-        if (bytes == null)
-            return null;
+	public static IQ create(byte bytes[]) {
+		if (bytes == null)
+			return null;
 
-        IQ iq = new IQ();
-        if (!iq.load(bytes))
-            return null;
+		IQ iq = new IQ();
+		if (!iq.load(bytes))
+			return null;
 
-        return iq;
-    }
+		return iq;
+	}
 
-    public IQ() {
-        mType = Type.Undefined;
-    }
+	public IQ() {
+		mType = Type.Undefined;
+	}
 
-    public IQ(Type type, String id, String xmlns, String action, byte[] param) {
-        mType = type;
-        mId = id;
-        mXmlns = xmlns;
-        mAction = action;
-        mParam = param;
-    }
+	public IQ(Type type, String id, String xmlns, String actionOrEvent,
+			byte[] param) {
+		mType = type;
+		mId = id;
+		mXmlns = xmlns;
 
-    public Type getType() {
-        return mType;
-    }
+		if (type == Type.Event) {
+			mAction = actionOrEvent;
+		} else {
+			mEvent = actionOrEvent;
+		}
 
-    public void setType(Type type) {
-        mType = type;
-    }
+		mParam = param;
+	}
 
-    public String getId() {
-        return mId;
-    }
+	public Type getType() {
+		return mType;
+	}
 
-    public void setId(String id) {
-        mId = id;
-    }
+	public void setType(Type type) {
+		mType = type;
+	}
 
-    public String getXmlns() {
-        return mXmlns;
-    }
+	public String getId() {
+		return mId;
+	}
 
-    public void setXmlns(String xmlns) {
-        mXmlns = xmlns;
-    }
+	public void setId(String id) {
+		mId = id;
+	}
 
-    public String getAction() {
-        return mAction;
-    }
+	public String getXmlns() {
+		return mXmlns;
+	}
 
-    public void setAction(String action) {
-        mAction = action;
-    }
-    
-    public String getEvent() {
-        return mEvent;
-    }
+	public void setXmlns(String xmlns) {
+		mXmlns = xmlns;
+	}
 
-    public void setEvent(String event) {
-        mEvent = event;
-    }
+	public String getAction() {
+		return mAction;
+	}
 
-    public byte[] getParam() {
-        return mParam;
-    }
+	public void setAction(String action) {
+		mAction = action;
+	}
 
-    public void setParam(byte[] param) {
-        mParam = param;
-    }
+	public String getEvent() {
+		return mEvent;
+	}
 
-    public boolean load(byte bytes[]) {
-        boolean result = false;
+	public void setEvent(String event) {
+		mEvent = event;
+	}
 
-        do {
-            if (bytes == null)
-                break;
+	public byte[] getParam() {
+		return mParam;
+	}
 
-            InputStream is = new ByteArrayInputStream(bytes);
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	public void setParam(byte[] param) {
+		mParam = param;
+	}
 
-            try {
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                Document document = builder.parse(is);
+	public boolean load(byte bytes[]) {
+		boolean result = false;
 
-                Element root = document.getDocumentElement();
-                if (root == null)
-                    break;
+		do {
+			if (bytes == null)
+				break;
 
-                if (!root.getTagName().equalsIgnoreCase("iq"))
-                    break;
+			InputStream is = new ByteArrayInputStream(bytes);
+			DocumentBuilderFactory factory = DocumentBuilderFactory
+					.newInstance();
 
-                String type = root.getAttribute("type");
-                if (type == null)
-                    break;
+			try {
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				Document document = builder.parse(is);
 
-                mType = Type.toType(type);
+				Element root = document.getDocumentElement();
+				if (root == null)
+					break;
 
-                mId = root.getAttribute("id");
-                if (mId == null)
-                    break;
+				if (!root.getTagName().equalsIgnoreCase("iq"))
+					break;
 
-                Element tagQuery = getTag(root, "query");
-                if (tagQuery == null)
-                    break;
+				String type = root.getAttribute("type");
+				if (type == null)
+					break;
 
-                mXmlns = tagQuery.getAttribute("xmlns");
-                if (mXmlns == null)
-                    break;
+				mType = Type.toType(type);
 
-                if (mType == Type.Event) {
-                    mEvent = tagQuery.getAttribute("event");
-                    if (mEvent == null)
-                        break;
-                }
-                else {
-                    mAction = tagQuery.getAttribute("action");
-                    if (mAction == null)
-                        break;
-                }
+				mId = root.getAttribute("id");
+				if (mId == null)
+					break;
 
-                Element tagParam = getTag(tagQuery, "param");
-                if (tagParam == null)
-                    break;
+				Element tagQuery = getTag(root, "query");
+				if (tagQuery == null)
+					break;
 
-                String param = tagParam.getTextContent();
-                if (param != null) {
-                    mParam = Base64.decode(tagParam.getTextContent(), Base64.DEFAULT);
-                }
-                else {
-                    mParam = null;
-                }
+				mXmlns = tagQuery.getAttribute("xmlns");
+				if (mXmlns == null)
+					break;
 
-                result = true;
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
-            } catch (SAXException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } while (false);
+				if (mType == Type.Event) {
+					mEvent = tagQuery.getAttribute("event");
+					if (mEvent == null)
+						break;
+				} else {
+					mAction = tagQuery.getAttribute("action");
+					if (mAction == null)
+						break;
+				}
 
-        return result;
-    }
+				Element tagParam = getTag(tagQuery, "param");
+				if (tagParam == null)
+					break;
 
-    private Element getTag(Element node, String tag) {
-        if (node == null)
-            return null;
+				String param = tagParam.getTextContent();
+				if (param != null) {
+					mParam = Base64.decode(tagParam.getTextContent(),
+							Base64.DEFAULT);
+				} else {
+					mParam = null;
+				}
 
-        NodeList tags = node.getElementsByTagName("*");
-        for (int i = 0; i < tags.getLength(); ++i) {
-            Element child = (Element) tags.item(i);
-            if (child.getTagName().equalsIgnoreCase(tag)) {
-                return child;
-            }
-        }
+				result = true;
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+			} catch (SAXException e) {
+				e.printStackTrace();
+			} catch (DOMException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} while (false);
 
-        return null;
-    }
+		return result;
+	}
 
-    @Override
-    public String toString() {
-        if (mType == Type.Undefined)
-            return null;
+	private Element getTag(Element node, String tag) {
+		if (node == null)
+			return null;
 
-        String paramBase64 = (mParam == null) ? "" :
-                Base64.encodeToString(mParam, Base64.DEFAULT);
+		NodeList tags = node.getElementsByTagName("*");
+		for (int i = 0; i < tags.getLength(); ++i) {
+			Element child = (Element) tags.item(i);
+			if (child.getTagName().equalsIgnoreCase(tag)) {
+				return child;
+			}
+		}
 
-        String iq = String
-                .format("<iq type=\"%s\" id=\"%s\"><query xmlns=\"%s\" %s=\"%s\"><param>%s</param></query></iq>",
-                        Type.toString(mType),
-                        mId,
-                        mXmlns,
-                        (mType == Type.Event) ? "event" : "action",
-                        (mType == Type.Event) ? mEvent : mAction,
-                        paramBase64);
+		return null;
+	}
 
-        return iq;
-    }
+	@Override
+	public String toString() {
+		if (mType == Type.Undefined)
+			return null;
+
+		String paramBase64 = (mParam == null) ? "" : Base64.encodeToString(
+				mParam, Base64.DEFAULT);
+
+		String iq = String
+				.format("<iq type=\"%s\" id=\"%s\"><query xmlns=\"%s\" %s=\"%s\"><param>%s</param></query></iq>",
+						Type.toString(mType), mId, mXmlns,
+						(mType == Type.Event) ? "event" : "action",
+						(mType == Type.Event) ? mEvent : mAction, paramBase64);
+
+		return iq;
+	}
 }

@@ -388,6 +388,7 @@ public class TcpServer {
             synchronized (this) {
                 TcpPacket packet = new TcpPacket();
                 packet.type = TcpPacket.Type.Send;
+                packet.conn = conn;
                 packet.data = data.clone();
 
                 synchronized (this) {
