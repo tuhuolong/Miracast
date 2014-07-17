@@ -178,8 +178,6 @@ public class TcpServer {
         }
 
         private void postSelect(SelectionKey key) {
-            Log.d(TAG, String.format("postSelect"));
-
             // accept a new connection
             if (key.isValid() && key.isAcceptable()) {
                 try {
@@ -212,6 +210,8 @@ public class TcpServer {
                 } catch (IOException e) {
                     e.printStackTrace();
 
+                    Log.d(TAG, String.format("channel is closed!"));
+
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
                     mConnPool.remove(conn);
@@ -230,6 +230,8 @@ public class TcpServer {
                     buf.clear();
                 }
                 else {
+                    Log.d(TAG, String.format("read < 0, close channel!"));
+                    
                     try {
                         channel.close();
                     } catch (IOException e) {
