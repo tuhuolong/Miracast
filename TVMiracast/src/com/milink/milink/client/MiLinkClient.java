@@ -1,15 +1,12 @@
 
 package com.milink.milink.client;
 
-
-import android.util.Log;
-
 import com.milink.milink.common.IQ;
 import com.milink.net.asio.tcp.client.TcpClient;
 import com.milink.net.asio.tcp.client.TcpClientListener;
 
 public class MiLinkClient implements TcpClientListener {
-    
+
     private static final String TAG = MiLinkClient.class.getSimpleName();
 
     private TcpClient mClient = null;
@@ -49,26 +46,30 @@ public class MiLinkClient implements TcpClientListener {
 
     @Override
     public void onConnected(TcpClient client) {
-        mListener.onConnected();
+        mListener.onConnected(this);
     }
 
     @Override
     public void onConnectedFailed(TcpClient client) {
-        mListener.onConnectedFailed();
+        mListener.onConnectedFailed(this);
     }
 
     @Override
     public void onDisconnect(TcpClient client) {
-        mListener.onDisconnect();
+        mListener.onDisconnect(this);
     }
 
     @Override
     public void onReceived(TcpClient client, byte[] data) {
-        Log.d("Recv", new String(data));
-
         IQ iq = IQ.create(data);
-        if (iq != null) {
-            mListener.onReceived(iq);
+        if (iq == null)
+            return;
+
+        if (iq.getType() == IQ.Type.Event) {
+            mListener.onEvent(this, iq);
+        }
+        else {
+            mListener.onReceived(this, iq);
         }
     }
 }

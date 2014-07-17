@@ -8,7 +8,6 @@ import android.view.Menu;
 import android.view.View;
 
 import com.milink.milink.common.IQ;
-import com.milink.milink.common.IQ.Type;
 import com.milink.milink.server.MiLinkServer;
 import com.milink.milink.server.MiLinkServerListener;
 import com.milink.milink.client.MiLinkClient;
@@ -40,11 +39,22 @@ public class MainActivity extends Activity implements MiLinkServerListener, MiLi
         mMilinkServer.stop();
     }
     
+    public void onPubEvent(View button) {
+        String param = "<root><ip>10.0.10.108</ip><port>1234</port></root>"; 
+        IQ iq = new IQ(IQ.Type.Event,
+                "1",
+                com.milink.milink.contants.Xmlns.MIRACAST,
+                com.milink.milink.contants.miracast.Events.STOPPED,
+                param.getBytes());
+        
+        mMilinkServer.publishEvent(iq);
+    }
+
     public void onConnect(View button) {
 //        String ip = "10.0.10.142";
 //        int port = 8080;
-      String ip = "10.0.10.136";
-      int port = 9999;
+        String ip = "10.0.10.136";
+        int port = 9999;
         int timeout = 1000 * 5;
 
         mMiLinkClient.connect(ip, port, timeout);
@@ -59,35 +69,50 @@ public class MainActivity extends Activity implements MiLinkServerListener, MiLi
         String param = "<root><ip>10.0.10.108</ip><port>1234</port></root>"; 
         IQ iq = new IQ(IQ.Type.Set,
                 "1",
-                com.milink.milink.common.Contants.XMLNS_MIRACAST,
-                "start",
+                com.milink.milink.contants.Xmlns.MIRACAST,
+                com.milink.milink.contants.miracast.Actions.START,
                 param.getBytes());
 
         mMiLinkClient.send(iq);
     }
 
     @Override
-    public void onReceived(String ip, int port, IQ iq) {
-        Log.d(TAG, String.format("recv from: %s:%d : %s", ip, port, iq.toString()));
+    public void onAccept(MiLinkServer server, String ip, int port) {
+        Log.d(TAG, String.format("onAccept from: %s:%d", ip, port));
     }
 
     @Override
-    public void onConnected() {
+    public void onReceived(MiLinkServer server, String ip, int port, IQ iq) {
+        Log.d(TAG, String.format("onReceived from: %s:%d : %s", ip, port, iq.toString()));
+    }
+
+    @Override
+    public void onConnectionClosed(MiLinkServer server, String ip, int port) {
+        Log.d(TAG, String.format("onClosed from: %s:%d", ip, port));
+    }
+
+    @Override
+    public void onConnected(MiLinkClient client) {
         Log.d(TAG, "onConnected");
     }
 
     @Override
-    public void onConnectedFailed() {
+    public void onConnectedFailed(MiLinkClient client) {
         Log.d(TAG, "onConnectedFailed");
     }
 
     @Override
-    public void onDisconnect() {
+    public void onDisconnect(MiLinkClient client) {
         Log.d(TAG, "onDisconnect");
     }
 
     @Override
-    public void onReceived(IQ iq) {
-        Log.d(TAG, String.format("recv: %s", iq.toString()));
+    public void onReceived(MiLinkClient client, IQ iq) {
+        Log.d(TAG, String.format("onReceived: %s", iq.toString()));
+    }
+
+    @Override
+    public void onEvent(MiLinkClient client, IQ iq) {
+        Log.d(TAG, String.format("onEvent: %s", iq.toString()));
     }
 }

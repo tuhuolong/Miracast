@@ -20,6 +20,7 @@ public class IQ {
 
     public enum Type {
         Undefined,
+        Event,
         Set,
         Get,
         Result,
@@ -29,6 +30,10 @@ public class IQ {
             String str = null;
 
             switch (type) {
+                case Event:
+                    str = "event";
+                    break;
+
                 case Error:
                     str = "error";
                     break;
@@ -55,7 +60,10 @@ public class IQ {
         public static Type toType(String type) {
             Type t = Type.Undefined;
 
-            if (type.equalsIgnoreCase("set")) {
+            if (type.equalsIgnoreCase("event")) {
+                t = Type.Event;
+            }
+            else if (type.equalsIgnoreCase("set")) {
                 t = Type.Set;
             }
             else if (type.equalsIgnoreCase("get")) {
@@ -76,6 +84,7 @@ public class IQ {
     private String mId = null;
     private String mXmlns = null;
     private String mAction = null;
+    private String mEvent = null;
     private byte[] mParam = null;
 
     public static IQ create(byte bytes[]) {
@@ -132,6 +141,14 @@ public class IQ {
     public void setAction(String action) {
         mAction = action;
     }
+    
+    public String getEvent() {
+        return mEvent;
+    }
+
+    public void setEvent(String event) {
+        mEvent = event;
+    }
 
     public byte[] getParam() {
         return mParam;
@@ -180,9 +197,16 @@ public class IQ {
                 if (mXmlns == null)
                     break;
 
-                mAction = tagQuery.getAttribute("action");
-                if (mAction == null)
-                    break;
+                if (mType == Type.Event) {
+                    mEvent = tagQuery.getAttribute("event");
+                    if (mEvent == null)
+                        break;
+                }
+                else {
+                    mAction = tagQuery.getAttribute("action");
+                    if (mAction == null)
+                        break;
+                }
 
                 Element tagParam = getTag(tagQuery, "param");
                 if (tagParam == null)
@@ -233,11 +257,12 @@ public class IQ {
                 Base64.encodeToString(mParam, Base64.DEFAULT);
 
         String iq = String
-                .format("<iq type=\"%s\" id=\"%s\"><query xmlns=\"%s\" action=\"%s\"><param>%s</param></query></iq>",
+                .format("<iq type=\"%s\" id=\"%s\"><query xmlns=\"%s\" %s=\"%s\"><param>%s</param></query></iq>",
                         Type.toString(mType),
                         mId,
                         mXmlns,
-                        mAction,
+                        (mType == Type.Event) ? "event" : "action",
+                        (mType == Type.Event) ? mEvent : mAction,
                         paramBase64);
 
         return iq;

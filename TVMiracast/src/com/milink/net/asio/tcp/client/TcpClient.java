@@ -3,8 +3,6 @@ package com.milink.net.asio.tcp.client;
 
 import android.util.Log;
 
-import com.milink.net.asio.tcp.oldclient.TcpConnection;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;

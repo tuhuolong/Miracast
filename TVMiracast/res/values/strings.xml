@@ -6,6 +6,7 @@
     <string name="hello_world">Hello world!</string>
 	<string name="Start">Start</string>
 	<string name="Stop">Stop</string>
+	<string name="PubEvent">PubEvent</string>
 	<string name="Connect">Connect</string>
 	<string name="Disconnect">Disconnect</string>
 	<string name="Send">Send</string>

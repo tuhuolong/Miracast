@@ -5,5 +5,9 @@ import com.milink.milink.common.IQ;
 
 public interface MiLinkServerListener {
 
-    void onReceived(String ip, int port, IQ iq);
+    void onAccept(MiLinkServer server, String ip, int port);
+
+    void onReceived(MiLinkServer server, String ip, int port, IQ iq);
+
+    void onConnectionClosed(MiLinkServer server, String ip, int port);
 }
