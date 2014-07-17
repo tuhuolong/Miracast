@@ -415,10 +415,6 @@ public class TcpClient {
                         continue;
                     }
 
-//                    String get = new String("GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n");
-//                    packet.data = get.getBytes();
-//                    Log.d("Send", new String(packet.data));
-
                     ByteBuffer buffer = ByteBuffer.wrap(packet.data);
                     buffer.clear();
 

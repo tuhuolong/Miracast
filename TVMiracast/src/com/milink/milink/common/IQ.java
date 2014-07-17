@@ -1,6 +1,8 @@
 
 package com.milink.milink.common;
 
+import android.util.Base64;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -74,7 +76,7 @@ public class IQ {
     private String mId = null;
     private String mXmlns = null;
     private String mAction = null;
-    private String mParam = null;
+    private byte[] mParam = null;
 
     public static IQ create(byte bytes[]) {
         if (bytes == null)
@@ -91,7 +93,7 @@ public class IQ {
         mType = Type.Undefined;
     }
 
-    public IQ(Type type, String id, String xmlns, String action, String param) {
+    public IQ(Type type, String id, String xmlns, String action, byte[] param) {
         mType = type;
         mId = id;
         mXmlns = xmlns;
@@ -131,11 +133,11 @@ public class IQ {
         mAction = action;
     }
 
-    public String getParam() {
+    public byte[] getParam() {
         return mParam;
     }
 
-    public void setParam(String param) {
+    public void setParam(byte[] param) {
         mParam = param;
     }
 
@@ -169,7 +171,7 @@ public class IQ {
                 mId = root.getAttribute("id");
                 if (mId == null)
                     break;
-                
+
                 Element tagQuery = getTag(root, "query");
                 if (tagQuery == null)
                     break;
@@ -186,7 +188,13 @@ public class IQ {
                 if (tagParam == null)
                     break;
 
-                mParam = tagParam.getTextContent();
+                String param = tagParam.getTextContent();
+                if (param != null) {
+                    mParam = Base64.decode(tagParam.getTextContent(), Base64.DEFAULT);
+                }
+                else {
+                    mParam = null;
+                }
 
                 result = true;
             } catch (ParserConfigurationException e) {
@@ -221,13 +229,16 @@ public class IQ {
         if (mType == Type.Undefined)
             return null;
 
+        String paramBase64 = (mParam == null) ? "" :
+                Base64.encodeToString(mParam, Base64.DEFAULT);
+
         String iq = String
                 .format("<iq type=\"%s\" id=\"%s\"><query xmlns=\"%s\" action=\"%s\"><param>%s</param></query></iq>",
                         Type.toString(mType),
                         mId,
                         mXmlns,
                         mAction,
-                        mParam);
+                        paramBase64);
 
         return iq;
     }

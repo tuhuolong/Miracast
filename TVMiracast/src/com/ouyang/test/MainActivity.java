@@ -41,8 +41,10 @@ public class MainActivity extends Activity implements MiLinkServerListener, MiLi
     }
     
     public void onConnect(View button) {
-        String ip = "10.0.10.142";
-        int port = 8080;
+//        String ip = "10.0.10.142";
+//        int port = 8080;
+      String ip = "10.0.10.136";
+      int port = 9999;
         int timeout = 1000 * 5;
 
         mMiLinkClient.connect(ip, port, timeout);
@@ -54,11 +56,12 @@ public class MainActivity extends Activity implements MiLinkServerListener, MiLi
 
     public void onSend(View button) {
 
+        String param = "<root><ip>10.0.10.108</ip><port>1234</port></root>"; 
         IQ iq = new IQ(IQ.Type.Set,
                 "1",
                 com.milink.milink.common.Contants.XMLNS_MIRACAST,
                 "start",
-                "<root><ip>10.0.10.108</ip><port>1234</port></root>");
+                param.getBytes());
 
         mMiLinkClient.send(iq);
     }
