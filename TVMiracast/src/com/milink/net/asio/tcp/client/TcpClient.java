@@ -158,7 +158,6 @@ public class TcpClient {
             }
 
             Log.d(TAG, String.format("connect to %s:%d is ok!", mIp, mPort));
-
             mIsConnected = true;
             mListener.onConnected(TcpClient.this);
 
@@ -172,15 +171,12 @@ public class TcpClient {
             mLoop = true;
             while (mLoop) {
                 try {
-                    Log.d(TAG, "select");
                     mSelector.select();
                 } catch (ClosedSelectorException e) {
                     break;
                 } catch (IOException e) {
                     break;
                 }
-
-                Log.d(TAG, "after select");
 
                 try {
                     Set<SelectionKey> readyKeys = mSelector.selectedKeys();
@@ -243,8 +239,6 @@ public class TcpClient {
         }
 
         private void postSelect(SelectionKey key) {
-            Log.d(TAG, "postSelect");
-
             if (key.isValid() && key.isReadable()) {
                 SocketChannel channel = (SocketChannel) key.channel();
 
@@ -421,10 +415,9 @@ public class TcpClient {
                         continue;
                     }
 
-                    String get = new String("GET / HTTP/1.1\r\n");
-                    packet.data = get.getBytes();
-
-                    Log.d("Send", new String(packet.data));
+//                    String get = new String("GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n");
+//                    packet.data = get.getBytes();
+//                    Log.d("Send", new String(packet.data));
 
                     ByteBuffer buffer = ByteBuffer.wrap(packet.data);
                     buffer.clear();

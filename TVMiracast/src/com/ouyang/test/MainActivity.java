@@ -41,7 +41,7 @@ public class MainActivity extends Activity implements MiLinkServerListener, MiLi
     }
     
     public void onConnect(View button) {
-        String ip = "10.0.10.123";
+        String ip = "10.0.10.142";
         int port = 8080;
         int timeout = 1000 * 5;
 
