@@ -136,7 +136,8 @@ public class TcpServer {
             Log.d(TAG, String.format("listen port: %d", mListenPort));
 
             while (true) {
-                preSelect();
+                if (!preSelect())
+                    break;
 
                 try {
                     mSelector.select();
@@ -161,20 +162,25 @@ public class TcpServer {
             Log.d(TAG, "listen stopped");
         }
 
-        private void preSelect() {
-            Log.d(TAG, String.format("preSelect"));
-
+        private boolean preSelect() {
             try {
                 mServerChannel.register(mSelector, SelectionKey.OP_ACCEPT);
-
-                for (TcpConn conn : mConnPool.getConns().values()) {
-                    conn.getChannel().register(mSelector, SelectionKey.OP_READ);
-                }
             } catch (ClosedChannelException e) {
                 e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
+                return false;
             }
+
+            for (TcpConn conn : mConnPool.getConns().values()) {
+                Log.d(TAG, String.format("Selector register channel: %s:%d", conn.getIp(), conn.getPort()));
+
+                try {
+                    conn.getChannel().register(mSelector, SelectionKey.OP_READ);
+                } catch (ClosedChannelException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return true;
         }
 
         private void postSelect(SelectionKey key) {
@@ -240,7 +246,11 @@ public class TcpServer {
 
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
+                    
+                    Log.d(TAG, String.format("ConnPool size %d", mConnPool.getConns().size()));
                     mConnPool.remove(conn);
+                    Log.d(TAG, String.format("remove conn %s:%d", conn.getIp(), conn.getPort()));
+                    Log.d(TAG, String.format("ConnPool size %d", mConnPool.getConns().size()));
                 }
             }
         }
