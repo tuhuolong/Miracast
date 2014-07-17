@@ -19,7 +19,8 @@ public class TcpConnPool {
     }
     
     public void remove(TcpConn conn) {
-        mConns.remove(conn);
+        String id = String.format("%s:%d", conn.getIp(), conn.getPort());
+        mConns.remove(id);
     }
 
     public TcpConn getConn(SocketChannel channel) {

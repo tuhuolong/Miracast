@@ -52,10 +52,10 @@ public class TcpServer {
             mRecvWorker = new RecvWorker();
             mSendWorker = new SendWorker();
             mSelectWorker = new SelectWorker();
-            
+
             doing = true;
         }
-        
+
         return doing;
     }
 
@@ -67,10 +67,10 @@ public class TcpServer {
             mSelectWorker.close();
             mRecvWorker.close();
             mSendWorker.close();
-            
+
             done = true;
         }
-        
+
         return done;
     }
 
@@ -171,7 +171,9 @@ public class TcpServer {
             }
 
             for (TcpConn conn : mConnPool.getConns().values()) {
-                Log.d(TAG, String.format("Selector register channel: %s:%d", conn.getIp(), conn.getPort()));
+                Log.d(TAG,
+                        String.format("Selector register channel: %s:%d", conn.getIp(),
+                                conn.getPort()));
 
                 try {
                     conn.getChannel().register(mSelector, SelectionKey.OP_READ);
@@ -237,7 +239,7 @@ public class TcpServer {
                 }
                 else {
                     Log.d(TAG, String.format("read < 0, close channel!"));
-                    
+
                     try {
                         channel.close();
                     } catch (IOException e) {
@@ -246,7 +248,7 @@ public class TcpServer {
 
                     TcpConn conn = mConnPool.getConn(channel);
                     mRecvWorker.putClosedConnection(conn);
-                    
+
                     Log.d(TAG, String.format("ConnPool size %d", mConnPool.getConns().size()));
                     mConnPool.remove(conn);
                     Log.d(TAG, String.format("remove conn %s:%d", conn.getIp(), conn.getPort()));
