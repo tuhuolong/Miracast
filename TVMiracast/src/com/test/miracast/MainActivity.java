@@ -9,15 +9,15 @@ import android.view.Menu;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
-import com.mi.bonjour.Bonjour;
-import com.mi.bonjour.BonjourListener;
-import com.mi.bonjour.serviceinfo.MiLinkServiceInfo;
-import com.mi.milink.common.IQ;
-import com.mi.milink.server.MiLinkServer;
-import com.mi.milink.server.MiLinkServerListener;
-import com.mi.milink.contants.*;
-import com.mi.milink.contants.miracast.*;
-import com.mi.net.util.NetWork;
+import com.milink.bonjour.Bonjour;
+import com.milink.bonjour.BonjourListener;
+import com.milink.bonjour.serviceinfo.MiLinkServiceInfo;
+import com.milink.milink.common.IQ;
+import com.milink.milink.contants.*;
+import com.milink.milink.contants.miracast.*;
+import com.milink.milink.server.MiLinkServer;
+import com.milink.milink.server.MiLinkServerListener;
+import com.milink.net.util.NetWork;
 
 import java.util.Map;
 
@@ -65,7 +65,7 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
 
     @Override
     protected void onDestroy() {
-        this.publishEvent(com.mi.milink.contants.miracast.Events.STOPPED);
+        this.publishEvent(com.milink.milink.contants.miracast.Events.STOPPED);
         
         mBonjour.stop();
         mServer.stop();
@@ -76,7 +76,7 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
         String param = "<root/>";
         IQ iq = new IQ(IQ.Type.Event,
                 eventId++,
-                com.mi.milink.contants.Xmlns.MIRACAST,
+                com.milink.milink.contants.Xmlns.MIRACAST,
                 event,
                 param.getBytes());
 
