@@ -2,6 +2,7 @@
 package com.test.miracast;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
@@ -28,7 +29,8 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
     private int eventId = 0;
     private VideoView mVideoView = null;
     private MediaController mMc = null;
-
+    private Handler mHandler = new Handler();
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,14 +85,15 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
 
     @Override
     public void onAccept(MiLinkServer server, String ip, int port) {
-        Log.d(TAG, String.format("onAccept: %s%d", ip, port));
+        Log.d(TAG, String.format("onAccept: %s:%d", ip, port));
     }
 
     @Override
     public void onReceived(MiLinkServer server, String ip, int port, IQ iq) {
-        Log.d(TAG, String.format("onReceived: %s%d", ip, port));
-        
-        if (iq.getXmlns().equalsIgnoreCase(Xmlns.MIRACAST)) {
+        Log.d(TAG, String.format("onReceived: %s:%d", ip, port));
+        Log.d(TAG, iq.toString());
+
+        if (! iq.getXmlns().equalsIgnoreCase(Xmlns.MIRACAST)) {
             iq.setType(IQ.Type.Error);
             server.send(ip, port, iq);
             return;
@@ -103,29 +106,41 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
         }
         
         if (iq.getAction().equalsIgnoreCase(Actions.START)){
-            ParamStart param = ParamStart.create(iq.getParam());
+
+            final ParamStart param = ParamStart.create(iq.getParam());
             if (param == null){
                 iq.setType(IQ.Type.Error);
                 server.send(ip, port, iq);
                 return;
             }
             
-            String url = String.format("wfd://%s:%d", param.getIp(), param.getPort());
-            mVideoView.setVideoPath(url);
-            mVideoView.start();
+            mHandler.post(new Runnable() {
+				@Override
+				public void run() {
+		            String url = String.format("wfd://%s:%d", param.getIp(), param.getPort());
+		            mVideoView.setVideoPath(url);
+		            mVideoView.start();
+				}
+            });
             
             this.publishEvent(Events.PLAYING);
         }
         else if (iq.getAction().equalsIgnoreCase(Actions.STOP)){
-            mVideoView.stopPlayback();
-
+        	
+            mHandler.post(new Runnable() {
+				@Override
+				public void run() {
+		            mVideoView.stopPlayback();
+				}
+            });
+            
             this.publishEvent(Events.STOPPED);
         }
     }
 
     @Override
     public void onConnectionClosed(MiLinkServer server, String ip, int port) {
-        Log.d(TAG, String.format("onConnectionClosed: %s%d", ip, port));
+        Log.d(TAG, String.format("onConnectionClosed: %s:%d", ip, port));
     }
 
     @Override
