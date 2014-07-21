@@ -88,7 +88,7 @@ public class MiLinkServer implements TcpServerListener {
 
     @Override
     public void onReceived(TcpServer server, TcpConn conn, byte[] data) {
-        Log.d(TAG, String.format("onReceive: %s:%d", conn.getIp(), conn.getPort()));
+        Log.d(TAG, String.format("onReceived: %s:%d", conn.getIp(), conn.getPort()));
 
         IQ iq = IQ.create(data);
         if (iq != null) {

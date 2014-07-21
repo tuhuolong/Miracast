@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
@@ -35,7 +36,8 @@ public class Bonjour implements Runnable, ServiceListener {
     private Context mContext = null;
     private boolean mStarted = false;
     private Map<String, ServiceInfo> mSvcInfoList = new HashMap<String, ServiceInfo>();
-
+    private ArrayList<String> mSvcType = new ArrayList<String>();
+    
     public Bonjour(Context context, BonjourListener listener) {
         mContext = context;
         mListener = listener;
@@ -103,9 +105,12 @@ public class Bonjour implements Runnable, ServiceListener {
     }
 
     public void discoveryService(String serviceType) {
-        if (mStarted) {
-            synchronized (mJmdnsLock) {
-                mJmdns.addServiceListener(serviceType, this);
+        synchronized (mJmdnsLock) {
+            mSvcType.add(serviceType);
+            
+            if (mStarted) {
+                Log.d(TAG, String.format("discoveryService: %s", serviceType));
+//                mJmdns.addServiceListener(serviceType, this);
             }
         }
     }
@@ -136,6 +141,11 @@ public class Bonjour implements Runnable, ServiceListener {
                 mJmdns = JmDNS.create(addr);
                 Log.d(TAG, String.format("JmDNS version: %s %s", JmDNS.VERSION,
                         addr.toString()));
+
+                for (String t : mSvcType) {
+                    Log.d(TAG, String.format("addServiceListener: %s", t));
+                    mJmdns.addServiceListener(t, this);
+                }
 
                 mStarted = true;
             } catch (IOException e) {

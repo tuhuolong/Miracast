@@ -28,7 +28,11 @@ public class MiLinkClient implements TcpClientListener {
     public boolean isConnected() {
         return mClient.isConnected();
     }
-
+    
+    public String getSelfIp() {
+        return mClient.getSelfIp();
+    }
+    
     public boolean send(IQ iq) {
         boolean result = false;
 

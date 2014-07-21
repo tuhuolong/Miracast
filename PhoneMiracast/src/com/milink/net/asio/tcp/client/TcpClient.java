@@ -417,9 +417,6 @@ public class TcpClient {
                         continue;
                     }
 
-                    Log.d(TAG, "Send");
-                    Log.d(TAG, new String(packet.data));
-
                     ByteBuffer buffer = ByteBuffer.wrap(packet.data);
                     buffer.clear();
 

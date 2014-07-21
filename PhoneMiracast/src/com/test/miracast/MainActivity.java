@@ -164,13 +164,14 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
         int ret = ScreenMirroring.getInstance().start(ip, port);
         Log.d(TAG, String.format("ScreenMirroring.start: %d", ret));
         
-        String param = String.format("<root><ip>%s</ip><port>%d</port></root>", ip, port);
+        ParamStart param = ParamStart.create(ip, port);
+        //String param = String.format("<root><ip>%s</ip><port>%d</port></root>", ip, port);
 
         IQ iq = new IQ(IQ.Type.Set,
                 mActionId++,
                 com.milink.milink.contants.Xmlns.MIRACAST,
                 com.milink.milink.contants.miracast.Actions.START,
-                param.getBytes());
+                param.toString().getBytes());
 
         mClient.send(iq);
     }
