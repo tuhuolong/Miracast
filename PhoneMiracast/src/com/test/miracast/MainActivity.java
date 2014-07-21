@@ -98,6 +98,9 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
 
             mClient.send(iq);
             mClient.disconnect();
+            
+            int ret = ScreenMirroring.getInstance().stop();
+            Log.d(TAG, String.format("ScreenMirroring.stop: %d", ret));
         }
     }
 
@@ -183,7 +186,7 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
         //getActionBar().setTitle("Start Miracast to : %s failed!");
         
         int ret = ScreenMirroring.getInstance().stop();
-        Log.d(TAG, String.format("ScreenMirroring.start: %d", ret));
+        Log.d(TAG, String.format("ScreenMirroring.stop: %d", ret));
     }
 
     @Override
