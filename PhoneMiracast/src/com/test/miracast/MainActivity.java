@@ -9,24 +9,24 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.mi.bonjour.Bonjour;
-import com.mi.bonjour.BonjourListener;
-import com.mi.milink.client.MiLinkClient;
-import com.mi.milink.client.MiLinkClientListener;
-import com.mi.milink.common.IQ;
+import com.milink.bonjour.Bonjour;
+import com.milink.bonjour.BonjourListener;
+import com.milink.milink.client.MiLinkClient;
+import com.milink.milink.client.MiLinkClientListener;
+import com.milink.milink.common.IQ;
+import com.milink.miracast.ScreenMirroring;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends Activity implements MiLinkClientListener, BonjourListener {
 
-    private static final String MILINK = "_milink._tcp";
+    private static final String MILINK = "_milink._tcp.local.";
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static MiLinkClient mClient = null;
     private static Bonjour mBonjour = null;
-    private Map<String, Device> mDevices = new HashMap<String, Device>();
+    private ArrayList<Device> mDevices = new ArrayList<Device>();
 
     private class Device {
         public String ip;
@@ -57,7 +57,7 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
         device.type = "_milink._tcp";
         device.name = "我的手机";
         device.port = 0;
-        mDevices.put(device.ip, device);
+        mDevices.add(device);
     }
 
     @Override
@@ -92,8 +92,8 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
             String param = "<root/>";
             IQ iq = new IQ(IQ.Type.Set,
                     mActionId++,
-                    com.mi.milink.contants.Xmlns.MIRACAST,
-                    com.mi.milink.contants.miracast.Actions.STOP,
+                    com.milink.milink.contants.Xmlns.MIRACAST,
+                    com.milink.milink.contants.miracast.Actions.STOP,
                     param.getBytes());
 
             mClient.send(iq);
@@ -105,12 +105,12 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
     public boolean onOptionsItemSelected(MenuItem item) {
         synchronized (mDevices) {
             final ArrayList<Device> deviceList = new ArrayList<Device>();
-            for (Device device : mDevices.values()) {
+            for (Device device : mDevices) {
                 deviceList.add(device);
             }
 
             final ArrayList<String> names = new ArrayList<String>();
-            for (Device device : mDevices.values()) {
+            for (Device device : mDevices) {
                 names.add(device.name);
             }
 
@@ -159,13 +159,17 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
     public void onConnected(MiLinkClient client) {
         Log.d(TAG, "onConnected");
 
-        String param = String.format("<root><ip>%s</ip><port>%d</port></root>",
-                mClient.getSelfIp(), 9999);
+        String ip = client.getSelfIp();
+        int port = 9999;
+        int ret = ScreenMirroring.getInstance().start(ip, port);
+        Log.d(TAG, String.format("ScreenMirroring.start: %d", ret));
+        
+        String param = String.format("<root><ip>%s</ip><port>%d</port></root>", ip, port);
 
         IQ iq = new IQ(IQ.Type.Set,
                 mActionId++,
-                com.mi.milink.contants.Xmlns.MIRACAST,
-                com.mi.milink.contants.miracast.Actions.START,
+                com.milink.milink.contants.Xmlns.MIRACAST,
+                com.milink.milink.contants.miracast.Actions.START,
                 param.getBytes());
 
         mClient.send(iq);
@@ -175,7 +179,10 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
     public void onConnectedFailed(MiLinkClient client) {
         Log.d(TAG, "onConnectedFailed");
 
-        getActionBar().setTitle("Start Miracast to : %s failed!");
+        //getActionBar().setTitle("Start Miracast to : %s failed!");
+        
+        int ret = ScreenMirroring.getInstance().stop();
+        Log.d(TAG, String.format("ScreenMirroring.start: %d", ret));
     }
 
     @Override
@@ -186,11 +193,24 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
     @Override
     public void onReceived(MiLinkClient client, IQ iq) {
         Log.d(TAG, "onReceived");
+        Log.d(TAG, iq.toString());
     }
 
     @Override
     public void onEvent(MiLinkClient client, IQ iq) {
         Log.d(TAG, "onEvent");
+        
+        if (iq.getType() != IQ.Type.Event)
+            return;
+        
+        if (! iq.getXmlns().equalsIgnoreCase(com.milink.milink.contants.Xmlns.MIRACAST))
+            return;
+        
+        if (iq.getEvent().equalsIgnoreCase(com.milink.milink.contants.miracast.Events.STOPPED)) {
+            Log.d(TAG, "TV stopped!");
+            ScreenMirroring.getInstance().stop();
+            return;
+        }
     }
 
     @Override
@@ -204,13 +224,18 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
         device.name = name;
         device.port = port;
 
-        mDevices.put(ip, device);
+        mDevices.add(device);
     }
 
     @Override
     public void onServiceLost(String name, String type, String ip) {
         Log.d(TAG, String.format("onServiceLost: %s %s %s:%d", name, type, ip));
 
-        mDevices.remove(ip);
+        for (Device device: mDevices) {
+            if (device.ip.equalsIgnoreCase(ip)) {
+                mDevices.remove(device);
+                break;
+            }
+        }
     }
 }
