@@ -6,6 +6,7 @@ package javax.jmdns.impl.tasks.resolver;
 
 import java.io.IOException;
 
+import javax.jmdns.impl.DNSEntry;
 import javax.jmdns.impl.DNSOutgoing;
 import javax.jmdns.impl.DNSQuestion;
 import javax.jmdns.impl.DNSRecord;
@@ -23,8 +24,7 @@ public class ServiceInfoResolver extends DNSResolverTask {
 
     private final ServiceInfoImpl _info;
 
-    public ServiceInfoResolver(JmDNSImpl jmDNSImpl, ServiceInfoImpl info)
-            throws StringIndexOutOfBoundsException {
+    public ServiceInfoResolver(JmDNSImpl jmDNSImpl, ServiceInfoImpl info) {
         super(jmDNSImpl);
         this._info = info;
         info.setDns(this.getDns());
@@ -66,8 +66,12 @@ public class ServiceInfoResolver extends DNSResolverTask {
             newOut = this.addAnswer(newOut, (DNSRecord) this.getDns().getCache().getDNSEntry(_info.getQualifiedName(), DNSRecordType.TYPE_SRV, DNSRecordClass.CLASS_IN), now);
             newOut = this.addAnswer(newOut, (DNSRecord) this.getDns().getCache().getDNSEntry(_info.getQualifiedName(), DNSRecordType.TYPE_TXT, DNSRecordClass.CLASS_IN), now);
             if (_info.getServer().length() > 0) {
-                newOut = this.addAnswer(newOut, (DNSRecord) this.getDns().getCache().getDNSEntry(_info.getServer(), DNSRecordType.TYPE_A, DNSRecordClass.CLASS_IN), now);
-                newOut = this.addAnswer(newOut, (DNSRecord) this.getDns().getCache().getDNSEntry(_info.getServer(), DNSRecordType.TYPE_AAAA, DNSRecordClass.CLASS_IN), now);
+                for (DNSEntry addressEntry : this.getDns().getCache().getDNSEntryList(_info.getServer(), DNSRecordType.TYPE_A, DNSRecordClass.CLASS_IN)) {
+                    newOut = this.addAnswer(newOut, (DNSRecord) addressEntry, now);
+                }
+                for (DNSEntry addressEntry : this.getDns().getCache().getDNSEntryList(_info.getServer(), DNSRecordType.TYPE_AAAA, DNSRecordClass.CLASS_IN)) {
+                    newOut = this.addAnswer(newOut, (DNSRecord) addressEntry, now);
+                }
             }
         }
         return newOut;
@@ -81,27 +85,11 @@ public class ServiceInfoResolver extends DNSResolverTask {
     protected DNSOutgoing addQuestions(DNSOutgoing out) throws IOException {
         DNSOutgoing newOut = out;
         if (!_info.hasData()) {
-            try {
-                newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getQualifiedName(), DNSRecordType.TYPE_SRV, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-            } catch (StringIndexOutOfBoundsException e ) {
-                e.printStackTrace();
-            }
-            try {
-                newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getQualifiedName(), DNSRecordType.TYPE_TXT, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-            } catch (StringIndexOutOfBoundsException e ) {
-                e.printStackTrace();
-            }
+            newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getQualifiedName(), DNSRecordType.TYPE_SRV, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
+            newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getQualifiedName(), DNSRecordType.TYPE_TXT, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
             if (_info.getServer().length() > 0) {
-                try {
-                    newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getServer(), DNSRecordType.TYPE_A, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-                } catch (StringIndexOutOfBoundsException e ) {
-                    e.printStackTrace();
-                }
-                try {
-                    newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getServer(), DNSRecordType.TYPE_AAAA, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-                } catch (StringIndexOutOfBoundsException e ) {
-                    e.printStackTrace();
-                }
+                newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getServer(), DNSRecordType.TYPE_A, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
+                newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_info.getServer(), DNSRecordType.TYPE_AAAA, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
             }
         }
         return newOut;

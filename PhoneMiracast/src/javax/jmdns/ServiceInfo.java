@@ -76,8 +76,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            string describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final String text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final String text) {
         return new ServiceInfoImpl(type, name, "", port, 0, 0, false, text);
     }
 
@@ -96,8 +95,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            string describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final String text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final String text) {
         return new ServiceInfoImpl(type, name, subtype, port, 0, 0, false, text);
     }
 
@@ -118,8 +116,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            string describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final String text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final String text) {
         return new ServiceInfoImpl(type, name, "", port, weight, priority, false, text);
     }
 
@@ -142,8 +139,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            string describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final String text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final String text) {
         return new ServiceInfoImpl(type, name, subtype, port, weight, priority, false, text);
     }
 
@@ -164,8 +160,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            properties describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final Map<String, ?> props)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final Map<String, ?> props) {
         return new ServiceInfoImpl(type, name, "", port, weight, priority, false, props);
     }
 
@@ -188,8 +183,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            properties describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final Map<String, ?> props)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final Map<String, ?> props) {
         return new ServiceInfoImpl(type, name, subtype, port, weight, priority, false, props);
     }
 
@@ -210,8 +204,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            bytes describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final byte[] text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final byte[] text) {
         return new ServiceInfoImpl(type, name, "", port, weight, priority, false, text);
     }
 
@@ -234,8 +227,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            bytes describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final byte[] text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final byte[] text) {
         return new ServiceInfoImpl(type, name, subtype, port, weight, priority, false, text);
     }
 
@@ -258,8 +250,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            string describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final boolean persistent, final String text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final boolean persistent, final String text) {
         return new ServiceInfoImpl(type, name, "", port, weight, priority, persistent, text);
     }
 
@@ -284,8 +275,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            string describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final boolean persistent, final String text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final boolean persistent, final String text) {
         return new ServiceInfoImpl(type, name, subtype, port, weight, priority, persistent, text);
     }
 
@@ -308,8 +298,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            properties describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final boolean persistent, final Map<String, ?> props)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final boolean persistent, final Map<String, ?> props) {
         return new ServiceInfoImpl(type, name, "", port, weight, priority, persistent, props);
     }
 
@@ -334,8 +323,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            properties describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final boolean persistent, final Map<String, ?> props)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final boolean persistent, final Map<String, ?> props) {
         return new ServiceInfoImpl(type, name, subtype, port, weight, priority, persistent, props);
     }
 
@@ -358,8 +346,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            bytes describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final boolean persistent, final byte[] text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final int port, final int weight, final int priority, final boolean persistent, final byte[] text) {
         return new ServiceInfoImpl(type, name, "", port, weight, priority, persistent, text);
     }
 
@@ -384,8 +371,7 @@ public abstract class ServiceInfo implements Cloneable {
      *            bytes describing the service
      * @return new service info
      */
-    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final boolean persistent, final byte[] text)
-            throws StringIndexOutOfBoundsException {
+    public static ServiceInfo create(final String type, final String name, final String subtype, final int port, final int weight, final int priority, final boolean persistent, final byte[] text) {
         return new ServiceInfoImpl(type, name, subtype, port, weight, priority, persistent, text);
     }
 

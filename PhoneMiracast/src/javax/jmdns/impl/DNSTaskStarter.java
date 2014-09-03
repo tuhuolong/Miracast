@@ -133,6 +133,16 @@ public interface DNSTaskStarter {
             return starter;
         }
 
+        /**
+         * Dispose of the DNSTaskStarter instance associated with this JmDNS.
+         *
+         * @param jmDNSImpl
+         *            jmDNS instance
+         */
+        public void disposeStarter(JmDNSImpl jmDNSImpl) {
+            _instances.remove(jmDNSImpl);
+        }
+
     }
 
     public static final class DNSTaskStarterImpl implements DNSTaskStarter {
@@ -264,7 +274,7 @@ public interface DNSTaskStarter {
             super();
             _jmDNSImpl = jmDNSImpl;
             _timer = new StarterTimer("JmDNS(" + _jmDNSImpl.getName() + ").Timer", true);
-            _stateTimer = new StarterTimer("JmDNS(" + _jmDNSImpl.getName() + ").State.Timer", false);
+            _stateTimer = new StarterTimer("JmDNS(" + _jmDNSImpl.getName() + ").State.Timer", true);
         }
 
         /*
@@ -353,8 +363,7 @@ public interface DNSTaskStarter {
          * @see javax.jmdns.impl.DNSTaskStarter#startServiceInfoResolver(javax.jmdns.impl.ServiceInfoImpl)
          */
         @Override
-        public void startServiceInfoResolver(ServiceInfoImpl info)
-                throws StringIndexOutOfBoundsException {
+        public void startServiceInfoResolver(ServiceInfoImpl info) {
             new ServiceInfoResolver(_jmDNSImpl, info).start(_timer);
         }
 

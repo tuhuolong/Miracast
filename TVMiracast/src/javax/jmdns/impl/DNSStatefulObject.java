@@ -1,6 +1,7 @@
 // Licensed under Apache License version 2.0
 package javax.jmdns.impl;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -60,7 +61,7 @@ public interface DNSStatefulObject {
                 semaphore.drainPermits();
                 _semaphores.putIfAbsent(thread, semaphore);
             }
-            //semaphore = _semaphores.get(thread); //there is a race condition, this semaphore could be NULL if another thread remove it just after put it.
+            semaphore = _semaphores.get(thread);
             try {
                 semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException exception) {
@@ -378,13 +379,17 @@ public interface DNSStatefulObject {
         @Override
         public boolean waitForAnnounced(long timeout) {
             if (!this.isAnnounced() && !this.willCancel()) {
-                _announcing.waitForEvent(timeout);
+                _announcing.waitForEvent(timeout + 10);
             }
             if (!this.isAnnounced()) {
-                if (this.willCancel() || this.willClose()) {
-                    logger.fine("Wait for announced cancelled: " + this);
-                } else {
-                    logger.warning("Wait for announced timed out: " + this);
+                // When we run multihomed we need to check twice
+                _announcing.waitForEvent(10);
+                if (!this.isAnnounced()) {
+                    if (this.willCancel() || this.willClose()) {
+                        logger.fine("Wait for announced cancelled: " + this);
+                    } else {
+                        logger.warning("Wait for announced timed out: " + this);
+                    }
                 }
             }
             return this.isAnnounced();
@@ -398,8 +403,12 @@ public interface DNSStatefulObject {
             if (!this.isCanceled()) {
                 _canceling.waitForEvent(timeout);
             }
-            if (!this.isCanceled() && !this.willClose()) {
-                logger.warning("Wait for canceled timed out: " + this);
+            if (!this.isCanceled()) {
+                // When we run multihomed we need to check twice
+                _canceling.waitForEvent(10);
+                if (!this.isCanceled() && !this.willClose()) {
+                    logger.warning("Wait for canceled timed out: " + this);
+                }
             }
             return this.isCanceled();
         }
@@ -409,7 +418,11 @@ public interface DNSStatefulObject {
          */
         @Override
         public String toString() {
-            return (_dns != null ? "DNS: " + _dns.getName() : "NO DNS") + " state: " + _state + " task: " + _task;
+            try {
+                return (_dns != null ? "DNS: " + _dns.getName() + " [" + _dns.getInetAddress() + "]" : "NO DNS") + " state: " + _state + " task: " + _task;
+            } catch (IOException exception) {
+                return (_dns != null ? "DNS: " + _dns.getName() : "NO DNS") + " state: " + _state + " task: " + _task;
+            }
         }
 
     }

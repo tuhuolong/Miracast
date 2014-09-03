@@ -18,7 +18,7 @@ import javax.jmdns.impl.constants.DNSRecordType;
 
 /**
  * A DNS question.
- * 
+ *
  * @author Arthur van Hoff, Pierre Frisch
  */
 public class DNSQuestion extends DNSEntry {
@@ -28,8 +28,7 @@ public class DNSQuestion extends DNSEntry {
      * Address question.
      */
     private static class DNS4Address extends DNSQuestion {
-        DNS4Address(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        DNS4Address(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
 
@@ -53,8 +52,7 @@ public class DNSQuestion extends DNSEntry {
      * Address question.
      */
     private static class DNS6Address extends DNSQuestion {
-        DNS6Address(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        DNS6Address(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
 
@@ -78,8 +76,7 @@ public class DNSQuestion extends DNSEntry {
      * Host Information question.
      */
     private static class HostInformation extends DNSQuestion {
-        HostInformation(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        HostInformation(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
     }
@@ -88,8 +85,7 @@ public class DNSQuestion extends DNSEntry {
      * Pointer question.
      */
     private static class Pointer extends DNSQuestion {
-        Pointer(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        Pointer(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
 
@@ -101,12 +97,8 @@ public class DNSQuestion extends DNSEntry {
             }
             if (this.isServicesDiscoveryMetaQuery()) {
                 for (String serviceType : jmDNSImpl.getServiceTypes().keySet()) {
-                    try {
-                        ServiceTypeEntry typeEntry = jmDNSImpl.getServiceTypes().get(serviceType);
-                        answers.add(new DNSRecord.Pointer("_services._dns-sd._udp.local.", DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, typeEntry.getType()));
-                    } catch (StringIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
+                    ServiceTypeEntry typeEntry = jmDNSImpl.getServiceTypes().get(serviceType);
+                    answers.add(new DNSRecord.Pointer("_services._dns-sd._udp.local.", DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, typeEntry.getType()));
                 }
             } else if (this.isReverseLookup()) {
                 String ipValue = this.getQualifiedNameMap().get(Fields.Instance);
@@ -133,8 +125,7 @@ public class DNSQuestion extends DNSEntry {
      * Service question.
      */
     private static class Service extends DNSQuestion {
-        Service(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        Service(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
 
@@ -143,17 +134,13 @@ public class DNSQuestion extends DNSEntry {
             String loname = this.getName().toLowerCase();
             if (jmDNSImpl.getLocalHost().getName().equalsIgnoreCase(loname)) {
                 // type = DNSConstants.TYPE_A;
-                answers.addAll(jmDNSImpl.getLocalHost().answers(this.isUnique(), DNSConstants.DNS_TTL));
+                answers.addAll(jmDNSImpl.getLocalHost().answers(this.getRecordClass(), this.isUnique(), DNSConstants.DNS_TTL));
                 return;
             }
             // Service type request
             if (jmDNSImpl.getServiceTypes().containsKey(loname)) {
-                try {
-                    DNSQuestion question = new Pointer(this.getName(), DNSRecordType.TYPE_PTR, this.getRecordClass(), this.isUnique());
-                    question.addAnswers(jmDNSImpl, answers);
-                } catch (StringIndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
+                DNSQuestion question = new Pointer(this.getName(), DNSRecordType.TYPE_PTR, this.getRecordClass(), this.isUnique());
+                question.addAnswers(jmDNSImpl, answers);
                 return;
             }
 
@@ -172,8 +159,7 @@ public class DNSQuestion extends DNSEntry {
      * Text question.
      */
     private static class Text extends DNSQuestion {
-        Text(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        Text(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
 
@@ -194,8 +180,7 @@ public class DNSQuestion extends DNSEntry {
      * AllRecords question.
      */
     private static class AllRecords extends DNSQuestion {
-        AllRecords(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-                throws StringIndexOutOfBoundsException {
+        AllRecords(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
             super(name, type, recordClass, unique);
         }
 
@@ -210,17 +195,13 @@ public class DNSQuestion extends DNSEntry {
             String loname = this.getName().toLowerCase();
             if (jmDNSImpl.getLocalHost().getName().equalsIgnoreCase(loname)) {
                 // type = DNSConstants.TYPE_A;
-                answers.addAll(jmDNSImpl.getLocalHost().answers(this.isUnique(), DNSConstants.DNS_TTL));
+                answers.addAll(jmDNSImpl.getLocalHost().answers(this.getRecordClass(), this.isUnique(), DNSConstants.DNS_TTL));
                 return;
             }
             // Service type request
             if (jmDNSImpl.getServiceTypes().containsKey(loname)) {
-                try {
-                    DNSQuestion question = new Pointer(this.getName(), DNSRecordType.TYPE_PTR, this.getRecordClass(), this.isUnique());
-                    question.addAnswers(jmDNSImpl, answers);
-                } catch (StringIndexOutOfBoundsException e) {
-                    e.printStackTrace();
-                }
+                DNSQuestion question = new Pointer(this.getName(), DNSRecordType.TYPE_PTR, this.getRecordClass(), this.isUnique());
+                question.addAnswers(jmDNSImpl, answers);
                 return;
             }
 
@@ -235,14 +216,13 @@ public class DNSQuestion extends DNSEntry {
 
     }
 
-    DNSQuestion(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-            throws StringIndexOutOfBoundsException {
+    DNSQuestion(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
         super(name, type, recordClass, unique);
     }
 
     /**
      * Create a question.
-     * 
+     *
      * @param name
      *            DNS name to be resolved
      * @param type
@@ -253,8 +233,7 @@ public class DNSQuestion extends DNSEntry {
      *            Request unicast response (Currently not supported in this implementation)
      * @return new question
      */
-    public static DNSQuestion newQuestion(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique)
-            throws StringIndexOutOfBoundsException {
+    public static DNSQuestion newQuestion(String name, DNSRecordType type, DNSRecordClass recordClass, boolean unique) {
         switch (type) {
             case TYPE_A:
                 return new DNS4Address(name, type, recordClass, unique);
@@ -286,7 +265,7 @@ public class DNSQuestion extends DNSEntry {
 
     /**
      * Adds answers to the list for our question.
-     * 
+     *
      * @param jmDNSImpl
      *            DNS holding the records
      * @param answers
@@ -298,9 +277,9 @@ public class DNSQuestion extends DNSEntry {
 
     protected void addAnswersForServiceInfo(JmDNSImpl jmDNSImpl, Set<DNSRecord> answers, ServiceInfoImpl info) {
         if ((info != null) && info.isAnnounced()) {
-            if (this.getName().equalsIgnoreCase(info.getQualifiedName()) || this.getName().equalsIgnoreCase(info.getType())) {
-                answers.addAll(jmDNSImpl.getLocalHost().answers(DNSRecordClass.UNIQUE, DNSConstants.DNS_TTL));
-                answers.addAll(info.answers(DNSRecordClass.UNIQUE, DNSConstants.DNS_TTL, jmDNSImpl.getLocalHost()));
+            if (this.getName().equalsIgnoreCase(info.getQualifiedName()) || this.getName().equalsIgnoreCase(info.getType()) || this.getName().equalsIgnoreCase(info.getTypeWithSubtype())) {
+                answers.addAll(jmDNSImpl.getLocalHost().answers(this.getRecordClass(), DNSRecordClass.UNIQUE, DNSConstants.DNS_TTL));
+                answers.addAll(info.answers(this.getRecordClass(), DNSRecordClass.UNIQUE, DNSConstants.DNS_TTL, jmDNSImpl.getLocalHost()));
             }
             if (logger.isLoggable(Level.FINER)) {
                 logger.finer(jmDNSImpl.getName() + " DNSQuestion(" + this.getName() + ").addAnswersForServiceInfo(): info: " + info + "\n" + answers);
@@ -328,7 +307,7 @@ public class DNSQuestion extends DNSEntry {
 
     /**
      * Checks if we are the only to be able to answer that question.
-     * 
+     *
      * @param jmDNSImpl
      *            DNS holding the records
      * @return <code>true</code> if we are the only one with the answer to the question, <code>false</code> otherwise.

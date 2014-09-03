@@ -128,15 +128,12 @@ public class Responder extends DNSTask {
                 }
 
                 // respond if we have answers
-                if (!answers.isEmpty() && _in.getPeerAddress()!=null) {
+                if (!answers.isEmpty()) {
                     if (logger.isLoggable(Level.FINER)) {
                         logger.finer(this.getName() + "run() JmDNS responding");
                     }
                     DNSOutgoing out = new DNSOutgoing(DNSConstants.FLAGS_QR_RESPONSE | DNSConstants.FLAGS_AA, !_unicast, _in.getSenderUDPPayload());
                     out.setId(_in.getId());
-                    out.setPeerAddress(_in.getPeerAddress());
-                    out.setUnicast(!_in.isMulticast());
-                    out.setDstPort(_in.getSrcPort());
                     for (DNSQuestion question : questions) {
                         if (question != null) {
                             out = this.addQuestion(out, question);

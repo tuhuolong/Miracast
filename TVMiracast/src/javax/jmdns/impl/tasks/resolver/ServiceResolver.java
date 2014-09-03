@@ -47,13 +47,9 @@ public class ServiceResolver extends DNSResolverTask {
         DNSOutgoing newOut = out;
         long now = System.currentTimeMillis();
         for (ServiceInfo info : this.getDns().getServices().values()) {
-            try {
-                newOut = this.addAnswer(newOut, new DNSRecord.Pointer(info.getType(), DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, info.getQualifiedName()), now);
-                // newOut = this.addAnswer(newOut, new DNSRecord.Service(info.getQualifiedName(), DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, info.getPriority(), info.getWeight(), info.getPort(),
-                // this.getDns().getLocalHost().getName()), now);
-            } catch (StringIndexOutOfBoundsException e) {
-                e.printStackTrace();
-            }
+            newOut = this.addAnswer(newOut, new DNSRecord.Pointer(info.getType(), DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, info.getQualifiedName()), now);
+            // newOut = this.addAnswer(newOut, new DNSRecord.Service(info.getQualifiedName(), DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, info.getPriority(), info.getWeight(), info.getPort(),
+            // this.getDns().getLocalHost().getName()), now);
         }
         return newOut;
     }
@@ -65,12 +61,8 @@ public class ServiceResolver extends DNSResolverTask {
     @Override
     protected DNSOutgoing addQuestions(DNSOutgoing out) throws IOException {
         DNSOutgoing newOut = out;
-        try {
-            newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_type, DNSRecordType.TYPE_PTR, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-            // newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_type, DNSRecordType.TYPE_SRV, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-        } catch (StringIndexOutOfBoundsException e) {
-            e.printStackTrace();
-        }
+        newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_type, DNSRecordType.TYPE_PTR, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
+        // newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(_type, DNSRecordType.TYPE_SRV, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
         return newOut;
     }
 

@@ -94,8 +94,7 @@ public class ListenerStatus<T extends EventListener> {
             if ((info != null) && (info.hasData())) {
                 String qualifiedName = event.getName() + "." + event.getType();
                 ServiceInfo previousServiceInfo = _addedServices.get(qualifiedName);
-                if (!_sameInfo(info, previousServiceInfo) || !_sameIP(info, previousServiceInfo)) {
-                    logger.finer("not same, call resolved: " + event);
+                if (!_sameInfo(info, previousServiceInfo)) {
                     if (null == previousServiceInfo) {
                         if (null == _addedServices.putIfAbsent(qualifiedName, info.clone())) {
                             this.getListener().serviceResolved(event);
@@ -112,18 +111,6 @@ public class ListenerStatus<T extends EventListener> {
                 logger.warning("Service Resolved called for an unresolved event: " + event);
 
             }
-        }
-        private static final boolean _sameIP(ServiceInfo info, ServiceInfo lastInfo) {
-            final String[] ips = info.getHostAddresses();
-            final String[] lastips = lastInfo.getHostAddresses();
-            if (null == ips) return false;
-            if (null == lastips)  return false;
-            if (ips.length != lastips.length) return false;
-            if (0 == ips.length) return true;
-            for (int i = 0; i<ips.length; i++) {
-                if(!ips[i].equals(lastips[i])) return false;
-            }
-            return true;
         }
 
         private static final boolean _sameInfo(ServiceInfo info, ServiceInfo lastInfo) {

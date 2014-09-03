@@ -46,9 +46,10 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
 
         Log.d(TAG, "onCreate");
 
-        mBonjour = new Bonjour(this, this);
+        mBonjour = Bonjour.getInstance();
+        mBonjour.setContent(this);
+        mBonjour.setListener(this);
         mBonjour.start();
-        mBonjour.discoveryService(MILINK);
 
         mClient = new MiLinkClient(this);
 
@@ -241,5 +242,18 @@ public class MainActivity extends Activity implements MiLinkClientListener, Bonj
                 break;
             }
         }
+    }
+
+    @Override
+    public void onStarted() {
+        mBonjour.discoveryService(MILINK);
+    }
+
+    @Override
+    public void onStartFailed() {
+    }
+
+    @Override
+    public void onStopped() {
     }
 }

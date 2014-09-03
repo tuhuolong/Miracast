@@ -49,12 +49,8 @@ public class TypeResolver extends DNSResolverTask {
         DNSOutgoing newOut = out;
         long now = System.currentTimeMillis();
         for (String type : this.getDns().getServiceTypes().keySet()) {
-            try {
-                ServiceTypeEntry typeEntry = this.getDns().getServiceTypes().get(type);
-                newOut = this.addAnswer(newOut, new DNSRecord.Pointer("_services._dns-sd._udp.local.", DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, typeEntry.getType()), now);
-            } catch (StringIndexOutOfBoundsException e) {
-                e.printStackTrace();
-            }
+            ServiceTypeEntry typeEntry = this.getDns().getServiceTypes().get(type);
+            newOut = this.addAnswer(newOut, new DNSRecord.Pointer("_services._dns-sd._udp.local.", DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, DNSConstants.DNS_TTL, typeEntry.getType()), now);
         }
         return newOut;
     }
@@ -65,12 +61,7 @@ public class TypeResolver extends DNSResolverTask {
      */
     @Override
     protected DNSOutgoing addQuestions(DNSOutgoing out) throws IOException {
-        try {
-            return this.addQuestion(out, DNSQuestion.newQuestion("_services._dns-sd._udp.local.", DNSRecordType.TYPE_PTR, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-        } catch (StringIndexOutOfBoundsException e) {
-            e.printStackTrace();
-            return out;
-        }
+        return this.addQuestion(out, DNSQuestion.newQuestion("_services._dns-sd._udp.local.", DNSRecordType.TYPE_PTR, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
     }
 
     /*

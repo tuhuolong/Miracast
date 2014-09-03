@@ -46,15 +46,10 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
         mServer.start();
 
         // start Bonjour
-        mBonjour = new Bonjour(this, this);
+        mBonjour = Bonjour.getInstance();
+        mBonjour.setContent(this);
+        mBonjour.setListener(this);
         mBonjour.start();
-
-        // publish Service
-        byte[] deviceId = NetWork.getMacAddress();
-        String name = "MiTV";
-        int port = mServer.getListenPort();
-        MiLinkServiceInfo svcInfo = new MiLinkServiceInfo(deviceId, name, port);
-        mBonjour.publishService(svcInfo);
     }
 
     @Override
@@ -152,5 +147,27 @@ public class MainActivity extends Activity implements MiLinkServerListener, Bonj
     @Override
     public void onServiceLost(String name, String type, String ip) {
         Log.d(TAG, String.format("onServiceLost: %s %s %s:%d", name, type, ip));
+    }
+
+    @Override
+    public void onStarted() {
+        Log.d(TAG, String.format("onStarted"));
+
+        // publish Service
+        byte[] deviceId = NetWork.getMacAddress();
+        String name = "MiTV";
+        int port = mServer.getListenPort();
+        MiLinkServiceInfo svcInfo = new MiLinkServiceInfo(deviceId, name, port);
+        mBonjour.publishService(svcInfo);
+    }
+
+    @Override
+    public void onStartFailed() {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void onStopped() {
+        // TODO Auto-generated method stub
     }
 }

@@ -6,17 +6,15 @@ package javax.jmdns.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.jmdns.impl.constants.DNSConstants;
 import javax.jmdns.impl.constants.DNSRecordClass;
-import javax.jmdns.impl.constants.DNSRecordType;
 
 /**
  * An outgoing DNS message.
- * 
+ *
  * @author Arthur van Hoff, Rick Blair, Werner Randelshofer
  */
 public final class DNSOutgoing extends DNSMessage {
@@ -28,7 +26,7 @@ public final class DNSOutgoing extends DNSMessage {
 
         /**
          * Creates a new message stream, with a buffer capacity of the specified size, in bytes.
-         * 
+         *
          * @param size
          *            the initial size.
          * @exception IllegalArgumentException
@@ -150,18 +148,13 @@ public final class DNSOutgoing extends DNSMessage {
         void writeQuestion(DNSQuestion question) {
             writeName(question.getName());
             writeShort(question.getRecordType().indexValue());
-            writeShort(question.getRecordClass().indexValue() | DNSRecordClass.CLASS_UNIQUE);
+            writeShort(question.getRecordClass().indexValue());
         }
 
         void writeRecord(DNSRecord rec, long now) {
             writeName(rec.getName());
             writeShort(rec.getRecordType().indexValue());
-            if (rec.getRecordType()==DNSRecordType.TYPE_PTR){
-                writeShort(rec.getRecordClass().indexValue() | ((rec.isUnique() && _out.isMulticast()) ? DNSRecordClass.CLASS_UNIQUE : 0));
-            }else{
-                writeShort(rec.getRecordClass().indexValue() | DNSRecordClass.CLASS_UNIQUE);
-            }
-            
+            writeShort(rec.getRecordClass().indexValue() | ((rec.isUnique() && _out.isMulticast()) ? DNSRecordClass.CLASS_UNIQUE : 0));
             writeInt((now == 0) ? rec.getTTL() : rec.getRemainingTTL(now));
 
             // We need to take into account the 2 size bytes
@@ -194,13 +187,9 @@ public final class DNSOutgoing extends DNSMessage {
 
     private final static int          HEADER_SIZE                 = 12;
 
-    private InetAddress _peerAddr;
-    
-    private int _dstPort  = DNSConstants.MDNS_PORT;
-
     /**
      * Create an outgoing multicast query or response.
-     * 
+     *
      * @param flags
      */
     public DNSOutgoing(int flags) {
@@ -209,7 +198,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Create an outgoing query or response.
-     * 
+     *
      * @param flags
      * @param multicast
      */
@@ -219,7 +208,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Create an outgoing query or response.
-     * 
+     *
      * @param flags
      * @param multicast
      * @param senderUDPPayload
@@ -237,7 +226,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Return the number of byte available in the message.
-     * 
+     *
      * @return available space
      */
     public int availableSpace() {
@@ -246,7 +235,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Add a question to the message.
-     * 
+     *
      * @param rec
      * @exception IOException
      */
@@ -264,7 +253,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Add an answer if it is not suppressed.
-     * 
+     *
      * @param in
      * @param rec
      * @exception IOException
@@ -277,7 +266,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Add an answer to the message.
-     * 
+     *
      * @param rec
      * @param now
      * @exception IOException
@@ -300,7 +289,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Add an authoritative answer to the message.
-     * 
+     *
      * @param rec
      * @exception IOException
      */
@@ -318,7 +307,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Add an additional answer to the record. Omit if there is no room.
-     * 
+     *
      * @param in
      * @param rec
      * @exception IOException
@@ -337,7 +326,7 @@ public final class DNSOutgoing extends DNSMessage {
 
     /**
      * Builds the final message buffer to be send and returns it.
-     * 
+     *
      * @return bytes to send.
      */
     public byte[] data() {
@@ -366,11 +355,6 @@ public final class DNSOutgoing extends DNSMessage {
         return message.toByteArray();
     }
 
-    @Override
-    public boolean isQuery() {
-        return (this.getFlags() & DNSConstants.FLAGS_QR_MASK) == DNSConstants.FLAGS_QR_QUERY;
-    }
-
     /**
      * Debugging.
      */
@@ -392,13 +376,13 @@ public final class DNSOutgoing extends DNSMessage {
         if (this.getFlags() != 0) {
             buf.append(", flags=0x");
             buf.append(Integer.toHexString(this.getFlags()));
-            if ((this.getFlags() & DNSConstants.FLAGS_QR_RESPONSE) != 0) {
+            if (this.isResponse()) {
                 buf.append(":r");
             }
-            if ((this.getFlags() & DNSConstants.FLAGS_AA) != 0) {
+            if (this.isAuthoritativeAnswer()) {
                 buf.append(":aa");
             }
-            if ((this.getFlags() & DNSConstants.FLAGS_TC) != 0) {
+            if (this.isTruncated()) {
                 buf.append(":tc");
             }
         }
@@ -459,26 +443,4 @@ public final class DNSOutgoing extends DNSMessage {
         return this._maxUDPPayload;
     }
 
-    public void setPeerAddress(InetAddress peerAddr) {
-        this._peerAddr = peerAddr;
-    }
-
-    public InetAddress getPeerAddress() {
-        return this._peerAddr;
-    }
-
-    public void setUnicast(boolean unicast) {
-        this._multicast = !unicast;
-    }
-    public boolean isUnicast() {
-        return !this._multicast;
-    }
-    
-    public void setDstPort(int port){
-        this._dstPort = port;
-    }
-    
-    public int getDstPort(){
-        return this._dstPort;
-    }
 }

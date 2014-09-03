@@ -114,13 +114,9 @@ public class Prober extends DNSStateTask {
     @Override
     protected DNSOutgoing buildOutgoingForDNS(DNSOutgoing out) throws IOException {
         DNSOutgoing newOut = out;
-        try {
-            newOut.addQuestion(DNSQuestion.newQuestion(this.getDns().getLocalHost().getName(), DNSRecordType.TYPE_ANY, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-            for (DNSRecord answer : this.getDns().getLocalHost().answers(DNSRecordClass.NOT_UNIQUE, this.getTTL())) {
-                newOut = this.addAuthoritativeAnswer(newOut, answer);
-            }
-        } catch (StringIndexOutOfBoundsException e) {
-            e.printStackTrace();
+        newOut.addQuestion(DNSQuestion.newQuestion(this.getDns().getLocalHost().getName(), DNSRecordType.TYPE_ANY, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
+        for (DNSRecord answer : this.getDns().getLocalHost().answers(DNSRecordClass.CLASS_ANY, DNSRecordClass.NOT_UNIQUE, this.getTTL())) {
+            newOut = this.addAuthoritativeAnswer(newOut, answer);
         }
         return newOut;
     }
@@ -132,18 +128,10 @@ public class Prober extends DNSStateTask {
     @Override
     protected DNSOutgoing buildOutgoingForInfo(ServiceInfoImpl info, DNSOutgoing out) throws IOException {
         DNSOutgoing newOut = out;
-        try {
-            newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(info.getQualifiedName(), DNSRecordType.TYPE_ANY, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
-            // the "unique" flag should be not set here because these answers haven't been proven unique yet this means the record will not exactly match the announcement record
-        } catch (StringIndexOutOfBoundsException e) {
-            e.printStackTrace();
-        }
-        try {
-            newOut = this.addAuthoritativeAnswer(newOut, new DNSRecord.Service(info.getQualifiedName(), DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, this.getTTL(), info.getPriority(), info.getWeight(), info.getPort(), this.getDns().getLocalHost()
-                    .getName()));
-        } catch (StringIndexOutOfBoundsException e) {
-            e.printStackTrace();
-        }
+        newOut = this.addQuestion(newOut, DNSQuestion.newQuestion(info.getQualifiedName(), DNSRecordType.TYPE_ANY, DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE));
+        // the "unique" flag should be not set here because these answers haven't been proven unique yet this means the record will not exactly match the announcement record
+        newOut = this.addAuthoritativeAnswer(newOut, new DNSRecord.Service(info.getQualifiedName(), DNSRecordClass.CLASS_IN, DNSRecordClass.NOT_UNIQUE, this.getTTL(), info.getPriority(), info.getWeight(), info.getPort(), this.getDns().getLocalHost()
+                .getName()));
         return newOut;
     }
 

@@ -24,9 +24,7 @@ import javax.jmdns.ServiceListener;
 public class Bonjour implements Runnable, ServiceListener {
 
     private static final String TAG = Bonjour.class.getSimpleName();
-//    public static final String AIRPLAY = "_airplay._tcp.local.";
-//    public static final String AIRTUNES = "_roap._tcp.local.";
-//    public static final String DACP = "_dacp._tcp.local.";
+    private static final Bonjour mSingle = new Bonjour();
 
     private WifiManager.MulticastLock mWifiLock = null;
     private static byte[] mJmdnsLock = new byte[0];
@@ -37,9 +35,19 @@ public class Bonjour implements Runnable, ServiceListener {
     private boolean mStarted = false;
     private Map<String, ServiceInfo> mSvcInfoList = new HashMap<String, ServiceInfo>();
     private ArrayList<String> mSvcType = new ArrayList<String>();
-    
-    public Bonjour(Context context, BonjourListener listener) {
+
+    private Bonjour() {
+    }
+
+    public static Bonjour getInstance() {
+        return mSingle;
+    }
+
+    public void setContent(Context context) {
         mContext = context;
+    }
+
+    public void setListener(BonjourListener listener) {
         mListener = listener;
     }
 
@@ -66,6 +74,7 @@ public class Bonjour implements Runnable, ServiceListener {
             return;
 
         Log.v(TAG, "stop");
+        mStarted = false;
 
         if (mJmdns != null) {
             try {
@@ -83,6 +92,8 @@ public class Bonjour implements Runnable, ServiceListener {
             mWifiLock.setReferenceCounted(false);
             mWifiLock.release();
         }
+
+        mListener.onStopped();
     }
 
     public void publishService(BonjourServiceInfo svcInfo) {
@@ -94,12 +105,30 @@ public class Bonjour implements Runnable, ServiceListener {
                     0,
                     svcInfo.getProperties());
 
-            mSvcInfoList.put(svcInfo.getServiceName(), serviceInfo);
+            if (!mSvcInfoList.containsKey(svcInfo.getServiceType())) {
+                mSvcInfoList.put(svcInfo.getServiceType(), serviceInfo);
 
-            try {
-                mJmdns.registerService(serviceInfo);
-            } catch (IOException e) {
-                e.printStackTrace();
+                try {
+                    Log.v(TAG, String.format("registerService: %s (%s)",
+                            svcInfo.getServiceType(),
+                            svcInfo.getServiceName()));
+                    mJmdns.registerService(serviceInfo);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void unpublishService(String svcType) {
+        synchronized (mJmdnsLock) {
+            ServiceInfo serviceInfo = mSvcInfoList.get(svcType);
+            if (serviceInfo != null) {
+                Log.v(TAG, String.format("unregisterService: %s", svcType));
+                mJmdns.unregisterService(serviceInfo);
+                mSvcInfoList.remove(svcType);
             }
         }
     }
@@ -107,18 +136,23 @@ public class Bonjour implements Runnable, ServiceListener {
     public void discoveryService(String serviceType) {
         synchronized (mJmdnsLock) {
             mSvcType.add(serviceType);
-            
+
             if (mStarted) {
                 Log.d(TAG, String.format("discoveryService: %s", serviceType));
-//                mJmdns.addServiceListener(serviceType, this);
+                mJmdns.addServiceListener(serviceType, this);
             }
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        this.stop();
-        super.finalize();
+    public void undiscoveryService(String serviceType) {
+        synchronized (mJmdnsLock) {
+            mSvcType.remove(serviceType);
+
+            if (mStarted) {
+                Log.d(TAG, String.format("discoveryService: %s", serviceType));
+                mJmdns.removeServiceListener(serviceType, this);
+            }
+        }
     }
 
     @Override
@@ -139,18 +173,15 @@ public class Bonjour implements Runnable, ServiceListener {
                 InetAddress addr = InetAddress.getByAddress(ip);
 
                 mJmdns = JmDNS.create(addr);
-                Log.d(TAG, String.format("JmDNS version: %s %s", JmDNS.VERSION,
-                        addr.toString()));
-
-                for (String t : mSvcType) {
-                    Log.d(TAG, String.format("addServiceListener: %s", t));
-                    mJmdns.addServiceListener(t, this);
-                }
+                Log.d(TAG, String.format("JmDNS version: %s (%s)", JmDNS.VERSION,
+                        addr.getHostAddress()));
 
                 mStarted = true;
+                mListener.onStarted();
             } catch (IOException e) {
                 Log.e(TAG, "JmDNS.create() failed!");
                 e.printStackTrace();
+                mListener.onStartFailed();
             }
         }
     }
@@ -204,9 +235,6 @@ public class Bonjour implements Runnable, ServiceListener {
         while (propertyNames.hasMoreElements()) {
             String key = propertyNames.nextElement();
             String value = event.getInfo().getPropertyString(key);
-            
-            Log.d(TAG, String.format("%s=%s", key, value));
-
             properties.put(key, value);
         }
 

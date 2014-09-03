@@ -39,7 +39,7 @@ public abstract class JmDNS implements Closeable {
     /**
      * The version of JmDNS.
      */
-    public static final String VERSION = "3.4.1";
+    public static final String VERSION = "3.4.2";
 
     /**
      * <p>
@@ -137,10 +137,6 @@ public abstract class JmDNS implements Closeable {
         return new JmDNSImpl(addr, name);
     }
 
-    public static JmDNS create(final InetAddress addr, final String name, int netmask) throws IOException {
-        return new JmDNSImpl(addr, name, netmask);
-    }
-
     /**
      * Return the name of the JmDNS instance. This is an arbitrary string that is useful for distinguishing instances.
      *
@@ -162,6 +158,17 @@ public abstract class JmDNS implements Closeable {
      * @exception IOException
      *                if there is an error in the underlying protocol, such as a TCP error.
      */
+    public abstract InetAddress getInetAddress() throws IOException;
+
+    /**
+     * Return the address of the interface to which this instance of JmDNS is bound.
+     *
+     * @return Internet Address
+     * @exception IOException
+     *                if there is an error in the underlying protocol, such as a TCP error.
+     * @deprecated do not use this implementation yields unpredictable results use {@link #getInetAddress()}
+     */
+    @Deprecated
     public abstract InetAddress getInterface() throws IOException;
 
     /**
@@ -422,7 +429,5 @@ public abstract class JmDNS implements Closeable {
      * @return previous instance delegate
      */
     public abstract Delegate setDelegate(Delegate value);
-
-    public abstract boolean isAlive();
 
 }

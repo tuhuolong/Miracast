@@ -1,14 +1,15 @@
+
 package com.milink.bonjour.serviceinfo;
 
 import java.util.Map;
 
 public interface BonjourServiceInfo {
 
-	String getServiceName();
+    String getServiceName();
 
-	int getServicePort();
+    int getServicePort();
 
-	String getServiceType();
+    String getServiceType();
 
-	Map<String, String> getProperties();
+    Map<String, String> getProperties();
 }
